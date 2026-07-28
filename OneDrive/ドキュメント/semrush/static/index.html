@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SEO & Link Verification Agent</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 50%, #020617 100%);
+      min-height: 100vh;
+      color: #f8fafc;
+    }
+    .code-font { font-family: 'JetBrains Mono', monospace; }
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .kpi-card {
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+    }
+    .kpi-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.5);
+    }
+    .kpi-card.active {
+      border-color: var(--kpi-border-color, #6366f1);
+      background: rgba(30, 41, 59, 0.95);
+      box-shadow: 0 0 25px -5px var(--kpi-shadow-color, rgba(99, 102, 241, 0.4));
+    }
+    .pulse-ring {
+      animation: pulseRing 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes pulseRing {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.05); }
+    }
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+    ::-webkit-scrollbar-thumb { background: rgba(51, 65, 85, 0.8); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(71, 85, 105, 1); }
+  </style>
+</head>
+<body class="p-4 md:p-8 text-slate-100 flex flex-col min-h-screen">
+
+  <div class="max-w-7xl mx-auto w-full space-y-6 flex-1">
+    
+    <!-- Top Header -->
+    <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
+      <div class="flex items-center space-x-3">
+        <div class="p-3 bg-indigo-600/20 border border-indigo-500/40 rounded-2xl text-indigo-400">
+          <i data-lucide="shield-check" class="w-8 h-8"></i>
+        </div>
+        <div>
+          <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-indigo-300 bg-clip-text text-transparent">
+            SEO & Link Verification Agent
+          </h1>
+          <p class="text-xs md:text-sm text-slate-400 font-medium mt-0.5">
+            Audit bad links, 4XX status codes, duplicate metadata, missing image alt, crawl blocks & broken canonicals
+          </p>
+        </div>
+      </div>
+      
+      <div class="flex items-center space-x-3">
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-ping"></span>
+          Python Engine Ready
+        </span>
+      </div>
+    </header>
+
+    <!-- URL Input & Audit Control Bar -->
+    <div class="glass-panel rounded-2xl p-4 md:p-6 shadow-xl space-y-4">
+      <form id="auditForm" class="flex flex-col sm:flex-row gap-3">
+        <div class="relative flex-1">
+          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500">
+            <i data-lucide="globe" class="w-5 h-5"></i>
+          </div>
+          <input 
+            type="url" 
+            id="urlInput" 
+            placeholder="Enter website domain or URL (e.g. https://httpbin.org or https://wikipedia.org)" 
+            required 
+            class="w-full pl-11 pr-4 py-3.5 bg-slate-900/90 border border-slate-700/80 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent code-font text-sm transition"
+          />
+        </div>
+        <div class="w-full sm:w-52">
+          <select 
+            id="maxPagesSelect" 
+            class="w-full h-full py-3.5 px-3 bg-slate-900/90 border border-slate-700/80 rounded-xl text-indigo-300 font-semibold text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 transition cursor-pointer"
+          >
+            <option value="25" selected>25 Pages (Standard Crawl)</option>
+            <option value="10">10 Pages (Quick Crawl)</option>
+            <option value="50">50 Pages (Deep Crawl)</option>
+            <option value="100">100 Pages (Full Site Audit)</option>
+            <option value="1">1 Page (Single Page)</option>
+          </select>
+        </div>
+        <button 
+          type="submit" 
+          id="submitBtn"
+          class="px-7 py-3.5 bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/50 transition-all flex items-center justify-center space-x-2 min-w-[150px]"
+        >
+          <i data-lucide="search" class="w-5 h-5"></i>
+          <span>Crawl & Audit</span>
+        </button>
+      </form>
+
+      <!-- Quick Test Suggestions -->
+      <div class="flex flex-wrap items-center gap-2 pt-1 text-xs text-slate-400">
+        <span class="font-semibold text-slate-500">Quick Test URLs:</span>
+        <button onclick="setTestUrl('https://httpbin.org')" class="px-2.5 py-1 bg-slate-800/80 hover:bg-slate-700 rounded-lg text-slate-300 transition">httpbin.org</button>
+        <button onclick="setTestUrl('https://wikipedia.org')" class="px-2.5 py-1 bg-slate-800/80 hover:bg-slate-700 rounded-lg text-slate-300 transition">wikipedia.org</button>
+        <button onclick="setTestUrl('https://example.com')" class="px-2.5 py-1 bg-slate-800/80 hover:bg-slate-700 rounded-lg text-slate-300 transition">example.com</button>
+      </div>
+    </div>
+
+    <!-- Loading State View -->
+    <div id="loadingView" class="hidden glass-panel rounded-2xl p-12 text-center space-y-4">
+      <div class="relative inline-flex items-center justify-center w-16 h-16">
+        <div class="w-16 h-16 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
+        <i data-lucide="cpu" class="w-6 h-6 text-indigo-400 absolute"></i>
+      </div>
+      <div>
+        <h3 class="text-lg font-bold text-white">Python Agent Audit in Progress...</h3>
+        <p class="text-sm text-slate-400 mt-1" id="loadingStatusText">Analyzing DOM tags, crawling outgoing links, checking robots.txt and verifying canonical link status...</p>
+      </div>
+    </div>
+
+    <!-- Error Banner -->
+    <div id="errorView" class="hidden bg-rose-500/10 border border-rose-500/30 rounded-2xl p-5 text-rose-300 flex items-start space-x-3">
+      <i data-lucide="alert-triangle" class="w-6 h-6 text-rose-400 shrink-0 mt-0.5"></i>
+      <div>
+        <h4 class="font-bold text-rose-200">Audit Failed</h4>
+        <p class="text-sm mt-1" id="errorMessageText"></p>
+      </div>
+    </div>
+
+    <!-- Results Section (Initially Hidden) -->
+    <div id="resultsSection" class="hidden space-y-6">
+
+      <!-- Page Summary Bar -->
+      <div class="glass-panel rounded-2xl p-5 border border-slate-800">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="space-y-1">
+            <div class="flex items-center space-x-2">
+              <span id="pageStatusBadge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">HTTP 200</span>
+              <h2 id="scannedUrlTitle" class="text-base font-bold text-white code-font truncate max-w-xl"></h2>
+            </div>
+            <p id="pageMetaDesc" class="text-xs text-slate-400 italic line-clamp-2"></p>
+          </div>
+
+          <div class="flex items-center space-x-4 text-xs font-medium text-slate-400 shrink-0">
+            <div class="text-right">
+              <span class="block text-slate-500">Pages Crawled</span>
+              <span id="crawledPagesCount" class="text-sm font-bold text-indigo-400 code-font">1</span>
+            </div>
+            <div class="w-px h-8 bg-slate-800"></div>
+            <div class="text-right">
+              <span class="block text-slate-500">Links Scanned</span>
+              <span id="scannedLinksCount" class="text-sm font-bold text-slate-200 code-font">0</span>
+            </div>
+            <div class="w-px h-8 bg-slate-800"></div>
+            <div class="text-right">
+              <span class="block text-slate-500">Images Scanned</span>
+              <span id="scannedImagesCount" class="text-sm font-bold text-slate-200 code-font">0</span>
+            </div>
+            <div class="w-px h-8 bg-slate-800"></div>
+            <button onclick="exportCSV()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-slate-200 font-semibold transition flex items-center space-x-1.5">
+              <i data-lucide="download" class="w-4 h-4 text-indigo-400"></i>
+              <span>Export CSV</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI Stat Cards (Clickable for Filtering) -->
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Select Error KPI to Filter Issues Table</h3>
+          <span class="text-xs text-slate-500">Click any card below</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+
+          <!-- 1. Bad & 4XX Links KPI -->
+          <div 
+            onclick="selectKPI('bad_4xx_links')" 
+            id="kpi-bad_4xx_links" 
+            style="--kpi-border-color: #ef4444; --kpi-shadow-color: rgba(239, 68, 68, 0.4)"
+            class="kpi-card glass-panel rounded-2xl p-4 border border-rose-500/20 active"
+          >
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-rose-400">Bad / 4XX Links</span>
+              <div class="p-2 rounded-xl bg-rose-500/10 text-rose-400">
+                <i data-lucide="link-2-off" class="w-5 h-5"></i>
+              </div>
+            </div>
+            <div class="mt-3 flex items-baseline justify-between">
+              <span id="kpiCount-bad_4xx_links" class="text-3xl font-extrabold text-white code-font">0</span>
+              <span class="text-xs text-slate-400 font-medium">Broken Links</span>
+            </div>
+          </div>
+
+          <!-- 2. Duplicate Tags KPI -->
+          <div 
+            onclick="selectKPI('duplicate_tags')" 
+            id="kpi-duplicate_tags" 
+            style="--kpi-border-color: #f59e0b; --kpi-shadow-color: rgba(245, 158, 11, 0.4)"
+            class="kpi-card glass-panel rounded-2xl p-4 border border-amber-500/20"
+          >
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-amber-400">Duplicate Title/H1/Meta</span>
+              <div class="p-2 rounded-xl bg-amber-500/10 text-amber-400">
+                <i data-lucide="copy" class="w-5 h-5"></i>
+              </div>
+            </div>
+            <div class="mt-3 flex items-baseline justify-between">
+              <span id="kpiCount-duplicate_tags" class="text-3xl font-extrabold text-white code-font">0</span>
+              <span class="text-xs text-slate-400 font-medium">Tag Issues</span>
+            </div>
+          </div>
+
+          <!-- 3. Missing Alt KPI -->
+          <div 
+            onclick="selectKPI('missing_image_alt')" 
+            id="kpi-missing_image_alt" 
+            style="--kpi-border-color: #3b82f6; --kpi-shadow-color: rgba(59, 130, 246, 0.4)"
+            class="kpi-card glass-panel rounded-2xl p-4 border border-blue-500/20"
+          >
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-blue-400">Missing Image Alt</span>
+              <div class="p-2 rounded-xl bg-blue-500/10 text-blue-400">
+                <i data-lucide="image-off" class="w-5 h-5"></i>
+              </div>
+            </div>
+            <div class="mt-3 flex items-baseline justify-between">
+              <span id="kpiCount-missing_image_alt" class="text-3xl font-extrabold text-white code-font">0</span>
+              <span class="text-xs text-slate-400 font-medium">Images</span>
+            </div>
+          </div>
+
+          <!-- 4. Blocked Crawling KPI -->
+          <div 
+            onclick="selectKPI('blocked_crawling')" 
+            id="kpi-blocked_crawling" 
+            style="--kpi-border-color: #a855f7; --kpi-shadow-color: rgba(168, 85, 247, 0.4)"
+            class="kpi-card glass-panel rounded-2xl p-4 border border-purple-500/20"
+          >
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-purple-400">Blocked Crawl / Noindex</span>
+              <div class="p-2 rounded-xl bg-purple-500/10 text-purple-400">
+                <i data-lucide="ban" class="w-5 h-5"></i>
+              </div>
+            </div>
+            <div class="mt-3 flex items-baseline justify-between">
+              <span id="kpiCount-blocked_crawling" class="text-3xl font-extrabold text-white code-font">0</span>
+              <span class="text-xs text-slate-400 font-medium">Rules</span>
+            </div>
+          </div>
+
+          <!-- 5. Broken Canonical KPI -->
+          <div 
+            onclick="selectKPI('broken_canonical')" 
+            id="kpi-broken_canonical" 
+            style="--kpi-border-color: #f97316; --kpi-shadow-color: rgba(249, 115, 22, 0.4)"
+            class="kpi-card glass-panel rounded-2xl p-4 border border-orange-500/20"
+          >
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-orange-400">Broken Canonical Link</span>
+              <div class="p-2 rounded-xl bg-orange-500/10 text-orange-400">
+                <i data-lucide="git-commit" class="w-5 h-5"></i>
+              </div>
+            </div>
+            <div class="mt-3 flex items-baseline justify-between">
+              <span id="kpiCount-broken_canonical" class="text-3xl font-extrabold text-white code-font">0</span>
+              <span class="text-xs text-slate-400 font-medium">Errors</span>
+            </div>
+          </div>
+
+          <!-- 6. Slow Response Time KPI -->
+          <div 
+            onclick="selectKPI('slow_response_time')" 
+            id="kpi-slow_response_time" 
+            style="--kpi-border-color: #eab308; --kpi-shadow-color: rgba(234, 179, 8, 0.4)"
+            class="kpi-card glass-panel rounded-2xl p-4 border border-yellow-500/20"
+          >
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-yellow-400">Slow Page Latency (>1.5s)</span>
+              <div class="p-2 rounded-xl bg-yellow-500/10 text-yellow-400">
+                <i data-lucide="zap-off" class="w-5 h-5"></i>
+              </div>
+            </div>
+            <div class="mt-3 flex items-baseline justify-between">
+              <span id="kpiCount-slow_response_time" class="text-3xl font-extrabold text-white code-font">0</span>
+              <span class="text-xs text-slate-400 font-medium">Slow Pages</span>
+            </div>
+          </div>
+
+          <!-- 7. Missing Open Graph KPI -->
+          <div 
+            onclick="selectKPI('missing_open_graph')" 
+            id="kpi-missing_open_graph" 
+            style="--kpi-border-color: #06b6d4; --kpi-shadow-color: rgba(6, 182, 212, 0.4)"
+            class="kpi-card glass-panel rounded-2xl p-4 border border-cyan-500/20"
+          >
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-cyan-400">Missing Open Graph / Social</span>
+              <div class="p-2 rounded-xl bg-cyan-500/10 text-cyan-400">
+                <i data-lucide="share-2" class="w-5 h-5"></i>
+              </div>
+            </div>
+            <div class="mt-3 flex items-baseline justify-between">
+              <span id="kpiCount-missing_open_graph" class="text-3xl font-extrabold text-white code-font">0</span>
+              <span class="text-xs text-slate-400 font-medium">Social Tags</span>
+            </div>
+          </div>
+
+          <!-- 8. Insecure HTTP Links KPI -->
+          <div 
+            onclick="selectKPI('insecure_http_links')" 
+            id="kpi-insecure_http_links" 
+            style="--kpi-border-color: #ec4899; --kpi-shadow-color: rgba(236, 72, 153, 0.4)"
+            class="kpi-card glass-panel rounded-2xl p-4 border border-pink-500/20"
+          >
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-pink-400">Insecure HTTP / Mixed</span>
+              <div class="p-2 rounded-xl bg-pink-500/10 text-pink-400">
+                <i data-lucide="shield-alert" class="w-5 h-5"></i>
+              </div>
+            </div>
+            <div class="mt-3 flex items-baseline justify-between">
+              <span id="kpiCount-insecure_http_links" class="text-3xl font-extrabold text-white code-font">0</span>
+              <span class="text-xs text-slate-400 font-medium">Insecure Links</span>
+            </div>
+          </div>
+
+          <!-- 9. 5XX Server Errors KPI -->
+          <div 
+            onclick="selectKPI('server_5xx_errors')" 
+            id="kpi-server_5xx_errors" 
+            style="--kpi-border-color: #dc2626; --kpi-shadow-color: rgba(220, 38, 38, 0.4)"
+            class="kpi-card glass-panel rounded-2xl p-4 border border-red-600/20"
+          >
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-red-400">5XX Server Errors</span>
+              <div class="p-2 rounded-xl bg-red-600/10 text-red-400">
+                <i data-lucide="server-off" class="w-5 h-5"></i>
+              </div>
+            </div>
+            <div class="mt-3 flex items-baseline justify-between">
+              <span id="kpiCount-server_5xx_errors" class="text-3xl font-extrabold text-white code-font">0</span>
+              <span class="text-xs text-slate-400 font-medium">Server Crashes</span>
+            </div>
+          </div>
+
+          <!-- 10. Heading Hierarchy KPI -->
+          <div 
+            onclick="selectKPI('heading_hierarchy_violations')" 
+            id="kpi-heading_hierarchy_violations" 
+            style="--kpi-border-color: #10b981; --kpi-shadow-color: rgba(16, 185, 129, 0.4)"
+            class="kpi-card glass-panel rounded-2xl p-4 border border-emerald-500/20"
+          >
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-emerald-400">Heading Hierarchy (H1-H3)</span>
+              <div class="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
+                <i data-lucide="heading" class="w-5 h-5"></i>
+              </div>
+            </div>
+            <div class="mt-3 flex items-baseline justify-between">
+              <span id="kpiCount-heading_hierarchy_violations" class="text-3xl font-extrabold text-white code-font">0</span>
+              <span class="text-xs text-slate-400 font-medium">H1-H3 Flaws</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Detailed Interactive Table Card -->
+      <div class="glass-panel rounded-2xl overflow-hidden border border-slate-800 shadow-2xl">
+        <div class="p-5 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/60">
+          <div class="flex items-center space-x-3">
+            <span id="activeKPIBadge" class="p-2 rounded-xl bg-rose-500/10 text-rose-400">
+              <i data-lucide="alert-circle" class="w-5 h-5"></i>
+            </span>
+            <div>
+              <h3 id="activeKPITitle" class="text-base font-bold text-white">Bad / 4XX Links Detailed Report</h3>
+              <p id="activeKPISubtitle" class="text-xs text-slate-400">Showing all broken hyperlinks returning 4XX status codes</p>
+            </div>
+          </div>
+
+          <div class="relative min-w-[220px]">
+            <input 
+              type="text" 
+              id="tableSearchInput" 
+              oninput="filterTableRows()" 
+              placeholder="Search in table..." 
+              class="w-full pl-9 pr-3 py-2 bg-slate-950/80 border border-slate-700/70 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+            <i data-lucide="search" class="w-4 h-4 text-slate-500 absolute left-3 top-2.5"></i>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-950/80 text-slate-400 font-semibold border-b border-slate-800 uppercase tracking-wider">
+              <tr id="tableHeaderRow">
+                <!-- Dynamically Populated -->
+              </tr>
+            </thead>
+            <tbody id="tableBody" class="divide-y divide-slate-800/60 text-slate-300">
+              <!-- Dynamically Populated -->
+            </tbody>
+          </table>
+        </div>
+
+        <div id="emptyTableNotice" class="hidden p-10 text-center text-slate-500 space-y-2">
+          <i data-lucide="check-circle-2" class="w-10 h-10 text-emerald-400/80 mx-auto"></i>
+          <p class="text-sm font-semibold text-slate-300">No issues found in this category!</p>
+          <p class="text-xs">Great job! The verified link passed all checks for this metric.</p>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <footer class="mt-12 py-4 border-t border-slate-800/80 text-center text-xs text-slate-500">
+    SEO Link & Site Verification Agent &bull; Powered by 100% Free Python Engine
+  </footer>
+
+  <script>
+    let activeCategory = 'bad_4xx_links';
+    let currentAuditData = null;
+
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    function setTestUrl(url) {
+      document.getElementById('urlInput').value = url;
+    }
+
+    document.getElementById('auditForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const url = document.getElementById('urlInput').value.trim();
+      if (!url) return;
+
+      // Show Loading, Hide Results & Errors
+      document.getElementById('loadingView').classList.remove('hidden');
+      document.getElementById('resultsSection').classList.add('hidden');
+      document.getElementById('errorView').classList.add('hidden');
+      document.getElementById('submitBtn').disabled = true;
+
+      try {
+        const maxPagesVal = parseInt(document.getElementById('maxPagesSelect').value) || 25;
+        const response = await fetch('/api/audit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, max_pages: maxPagesVal })
+        });
+
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.detail || 'Audit request failed.');
+        }
+
+        currentAuditData = await response.json();
+        renderAuditResults(currentAuditData);
+      } catch (err) {
+        document.getElementById('errorView').classList.remove('hidden');
+        document.getElementById('errorMessageText').innerText = err.message || 'Server error occurred while auditing link.';
+      } finally {
+        document.getElementById('loadingView').classList.add('hidden');
+        document.getElementById('submitBtn').disabled = false;
+      }
+    });
+
+    function renderAuditResults(data) {
+      // 1. Header Summary
+      document.getElementById('scannedUrlTitle').innerText = data.target_url;
+      document.getElementById('pageMetaDesc').innerText = data.page_summary.description || 'No meta description found.';
+      document.getElementById('scannedLinksCount').innerText = data.kpi_counts.total_links_scanned;
+      document.getElementById('scannedImagesCount').innerText = data.kpi_counts.total_images_scanned;
+      if (document.getElementById('crawledPagesCount')) {
+        document.getElementById('crawledPagesCount').innerText = data.kpi_counts.total_pages_crawled || 1;
+      }
+
+      const pageStatus = data.page_summary.status_code;
+      const statusBadge = document.getElementById('pageStatusBadge');
+      statusBadge.innerText = `HTTP ${pageStatus}`;
+      if (pageStatus === 200) {
+        statusBadge.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+      } else {
+        statusBadge.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30";
+      }
+
+      // 2. KPI Counts
+      for (const [key, count] of Object.entries(data.kpi_counts)) {
+        const el = document.getElementById(`kpiCount-${key}`);
+        if (el) el.innerText = count;
+      }
+
+      // 3. Reveal Results & Render Active Table
+      document.getElementById('resultsSection').classList.remove('hidden');
+      selectKPI(activeCategory);
+      lucide.createIcons();
+    }
+
+    function selectKPI(category) {
+      activeCategory = category;
+
+      // Update active styling on cards
+      const cards = document.querySelectorAll('.kpi-card');
+      cards.forEach(card => card.classList.remove('active'));
+
+      const activeCard = document.getElementById(`kpi-${category}`);
+      if (activeCard) activeCard.classList.add('active');
+
+      const kpiTitles = {
+        'bad_4xx_links': { title: 'Bad / 4XX Broken Links Report', sub: 'Hyperlinks returning HTTP 4XX client error codes', icon: 'link-2-off', color: 'rose' },
+        'duplicate_tags': { title: 'Duplicate & Missing Metadata Tags Report', sub: 'Duplicate or missing Title tags, H1 headings & Meta descriptions', icon: 'copy', color: 'amber' },
+        'missing_image_alt': { title: 'Missing Image Alt Attributes Report', sub: 'Images lacking descriptive alt attributes for accessibility & SEO', icon: 'image-off', color: 'blue' },
+        'blocked_crawling': { title: 'Blocked Crawling & Noindex Directives Report', sub: 'Pages restricted by domain robots.txt rules or meta noindex tags', icon: 'ban', color: 'purple' },
+        'broken_canonical': { title: 'Broken Canonical Links Report', sub: 'Missing, duplicate, malformed, or cross-domain canonical tags', icon: 'git-commit', color: 'orange' },
+        'slow_response_time': { title: 'Slow Page Response Time Report', sub: 'Pages taking longer than 1.5s to respond (TTFB latency issue)', icon: 'zap-off', color: 'yellow' },
+        'missing_open_graph': { title: 'Missing Open Graph & Social Sharing Tags', sub: 'Pages lacking og:title, og:description, og:image or Twitter cards', icon: 'share-2', color: 'cyan' },
+        'insecure_http_links': { title: 'Insecure HTTP & Mixed Content Report', sub: 'Unencrypted http:// hyperlinks or image resources on secure https:// site', icon: 'shield-alert', color: 'pink' },
+        'server_5xx_errors': { title: 'HTTP 5XX Server Errors & Failures', sub: 'Backend 500, 502, 503 errors and request timeouts', icon: 'server-off', color: 'red' },
+        'heading_hierarchy_violations': { title: 'Heading Hierarchy (H1-H3) Structural Flaws', sub: 'Skipped heading levels (H1 -> H4) or missing H2 subheadings', icon: 'heading', color: 'emerald' }
+      };
+
+      const meta = kpiTitles[category] || { title: 'Issues Report', sub: 'Detailed diagnostic list', icon: 'alert-circle', color: 'indigo' };
+      document.getElementById('activeKPITitle').innerText = meta.title;
+      document.getElementById('activeKPISubtitle').innerText = meta.sub;
+
+      renderTable();
+    }
+
+    function renderTable() {
+      if (!currentAuditData) return;
+
+      const headerRow = document.getElementById('tableHeaderRow');
+      const tableBody = document.getElementById('tableBody');
+      const emptyNotice = document.getElementById('emptyTableNotice');
+
+      headerRow.innerHTML = '';
+      tableBody.innerHTML = '';
+
+      const issuesList = currentAuditData.issues[activeCategory] || [];
+
+      if (issuesList.length === 0) {
+        emptyNotice.classList.remove('hidden');
+        return;
+      } else {
+        emptyNotice.classList.add('hidden');
+      }
+
+      if (activeCategory === 'bad_4xx_links') {
+        headerRow.innerHTML = `
+          <th class="p-3">Target Broken Link</th>
+          <th class="p-3">Anchor Text</th>
+          <th class="p-3">HTTP Status</th>
+          <th class="p-3">Error Type</th>
+          <th class="p-3">Recommendation</th>
+        `;
+
+        issuesList.forEach(item => {
+          const row = document.createElement('tr');
+          row.className = "hover:bg-slate-800/40 transition border-b border-slate-800/40";
+          row.innerHTML = `
+            <td class="p-3 font-semibold text-rose-400 code-font max-w-xs truncate" title="${item.target_link || item.url}">
+              <a href="${item.target_link || item.url}" target="_blank" class="hover:underline flex items-center space-x-1">
+                <span>${item.target_link || item.url}</span>
+                <i data-lucide="external-link" class="w-3 h-3 shrink-0"></i>
+              </a>
+            </td>
+            <td class="p-3 text-slate-300 font-medium">${escapeHtml(item.anchor_text || 'Link')}</td>
+            <td class="p-3"><span class="px-2 py-0.5 rounded font-bold bg-rose-500/20 text-rose-300 code-font">${item.status_code}</span></td>
+            <td class="p-3 text-slate-400 font-semibold">${escapeHtml(item.type || item.error_type || '4XX Error')}</td>
+            <td class="p-3 text-slate-400 text-xs">${escapeHtml(item.recommendation)}</td>
+          `;
+          tableBody.appendChild(row);
+        });
+      }
+      else if (activeCategory === 'duplicate_tags') {
+        headerRow.innerHTML = `
+          <th class="p-3">Element</th>
+          <th class="p-3">Issue Type</th>
+          <th class="p-3">Details</th>
+          <th class="p-3">Tag Value</th>
+          <th class="p-3">Recommendation</th>
+        `;
+
+        issuesList.forEach(item => {
+          const row = document.createElement('tr');
+          row.className = "hover:bg-slate-800/40 transition border-b border-slate-800/40";
+          row.innerHTML = `
+            <td class="p-3 font-bold text-amber-400">${escapeHtml(item.element)}</td>
+            <td class="p-3 font-semibold text-white">${escapeHtml(item.issue_type)}</td>
+            <td class="p-3 text-slate-300">${escapeHtml(item.details)}</td>
+            <td class="p-3 text-slate-400 italic code-font max-w-xs truncate">${escapeHtml(item.value)}</td>
+            <td class="p-3 text-slate-400 text-xs">${escapeHtml(item.recommendation)}</td>
+          `;
+          tableBody.appendChild(row);
+        });
+      }
+      else if (activeCategory === 'missing_image_alt') {
+        headerRow.innerHTML = `
+          <th class="p-3">Image Source</th>
+          <th class="p-3">Page Location</th>
+          <th class="p-3">HTML Snippet</th>
+          <th class="p-3">Recommendation</th>
+        `;
+
+        issuesList.forEach(item => {
+          const row = document.createElement('tr');
+          row.className = "hover:bg-slate-800/40 transition border-b border-slate-800/40";
+          row.innerHTML = `
+            <td class="p-3 font-semibold text-blue-400 code-font max-w-xs truncate" title="${item.image_url}">
+              <a href="${item.image_url}" target="_blank" class="hover:underline flex items-center space-x-1">
+                <span>${item.image_url}</span>
+                <i data-lucide="external-link" class="w-3 h-3 shrink-0"></i>
+              </a>
+            </td>
+            <td class="p-3 text-slate-400 code-font truncate max-w-xs">${escapeHtml(item.page_url)}</td>
+            <td class="p-3 text-slate-300 font-mono text-[11px] bg-slate-900/60 p-1.5 rounded max-w-xs truncate">${escapeHtml(item.html_snippet)}</td>
+            <td class="p-3 text-slate-400 text-xs">${escapeHtml(item.recommendation)}</td>
+          `;
+          tableBody.appendChild(row);
+        });
+      }
+      else if (activeCategory === 'blocked_crawling') {
+        headerRow.innerHTML = `
+          <th class="p-3">Blocked Page URL</th>
+          <th class="p-3">Block Type</th>
+          <th class="p-3">Reason</th>
+          <th class="p-3">Recommendation</th>
+        `;
+
+        issuesList.forEach(item => {
+          const row = document.createElement('tr');
+          row.className = "hover:bg-slate-800/40 transition border-b border-slate-800/40";
+          row.innerHTML = `
+            <td class="p-3 font-semibold text-purple-400 code-font max-w-xs truncate">${escapeHtml(item.url)}</td>
+            <td class="p-3"><span class="px-2 py-0.5 rounded font-bold bg-purple-500/20 text-purple-300">${escapeHtml(item.type)}</span></td>
+            <td class="p-3 text-slate-300">${escapeHtml(item.reason)}</td>
+            <td class="p-3 text-slate-400 text-xs">${escapeHtml(item.recommendation)}</td>
+          `;
+          tableBody.appendChild(row);
+        });
+      }
+      else if (activeCategory === 'broken_canonical') {
+        headerRow.innerHTML = `
+          <th class="p-3">Page URL</th>
+          <th class="p-3">Canonical Link Value</th>
+          <th class="p-3">Issue Detected</th>
+          <th class="p-3">Recommendation</th>
+        `;
+
+        issuesList.forEach(item => {
+          const row = document.createElement('tr');
+          row.className = "hover:bg-slate-800/40 transition border-b border-slate-800/40";
+          row.innerHTML = `
+            <td class="p-3 font-semibold text-slate-200 code-font max-w-xs truncate">${escapeHtml(item.url)}</td>
+            <td class="p-3 font-semibold text-orange-400 code-font max-w-xs truncate">${escapeHtml(item.canonical_url)}</td>
+            <td class="p-3 font-bold text-rose-400">${escapeHtml(item.issue)}</td>
+            <td class="p-3 text-slate-400 text-xs">${escapeHtml(item.recommendation)}</td>
+          `;
+          tableBody.appendChild(row);
+        });
+      }
+      else if (activeCategory === 'slow_response_time') {
+        headerRow.innerHTML = `
+          <th class="p-3">Page URL</th>
+          <th class="p-3">Response Time</th>
+          <th class="p-3">Issue</th>
+          <th class="p-3">Recommendation</th>
+        `;
+
+        issuesList.forEach(item => {
+          const row = document.createElement('tr');
+          row.className = "hover:bg-slate-800/40 transition border-b border-slate-800/40";
+          row.innerHTML = `
+            <td class="p-3 font-semibold text-yellow-300 code-font max-w-xs truncate">${escapeHtml(item.url)}</td>
+            <td class="p-3"><span class="px-2 py-0.5 rounded font-bold bg-yellow-500/20 text-yellow-300 code-font">${escapeHtml(item.response_time)}</span></td>
+            <td class="p-3 text-slate-300 font-semibold">${escapeHtml(item.issue)}</td>
+            <td class="p-3 text-slate-400 text-xs">${escapeHtml(item.recommendation)}</td>
+          `;
+          tableBody.appendChild(row);
+        });
+      }
+      else if (activeCategory === 'missing_open_graph') {
+        headerRow.innerHTML = `
+          <th class="p-3">Page URL</th>
+          <th class="p-3">Missing Tags</th>
+          <th class="p-3">Details</th>
+          <th class="p-3">Recommendation</th>
+        `;
+
+        issuesList.forEach(item => {
+          const row = document.createElement('tr');
+          row.className = "hover:bg-slate-800/40 transition border-b border-slate-800/40";
+          row.innerHTML = `
+            <td class="p-3 font-semibold text-cyan-300 code-font max-w-xs truncate">${escapeHtml(item.url)}</td>
+            <td class="p-3"><span class="px-2 py-0.5 rounded font-bold bg-cyan-500/20 text-cyan-300 font-mono text-[11px]">${escapeHtml(item.missing_tags)}</span></td>
+            <td class="p-3 text-slate-300 text-xs">${escapeHtml(item.details)}</td>
+            <td class="p-3 text-slate-400 text-xs">${escapeHtml(item.recommendation)}</td>
+          `;
+          tableBody.appendChild(row);
+        });
+      }
+      else if (activeCategory === 'insecure_http_links') {
+        headerRow.innerHTML = `
+          <th class="p-3">Source Page</th>
+          <th class="p-3">Insecure Resource URL</th>
+          <th class="p-3">Resource Type</th>
+          <th class="p-3">Recommendation</th>
+        `;
+
+        issuesList.forEach(item => {
+          const row = document.createElement('tr');
+          row.className = "hover:bg-slate-800/40 transition border-b border-slate-800/40";
+          row.innerHTML = `
+            <td class="p-3 font-semibold text-slate-200 code-font max-w-xs truncate">${escapeHtml(item.page_url)}</td>
+            <td class="p-3 font-semibold text-pink-400 code-font max-w-xs truncate">${escapeHtml(item.resource_url)}</td>
+            <td class="p-3"><span class="px-2 py-0.5 rounded font-bold bg-pink-500/20 text-pink-300">${escapeHtml(item.resource_type)}</span></td>
+            <td class="p-3 text-slate-400 text-xs">${escapeHtml(item.recommendation)}</td>
+          `;
+          tableBody.appendChild(row);
+        });
+      }
+      else if (activeCategory === 'server_5xx_errors') {
+        headerRow.innerHTML = `
+          <th class="p-3">Target URL</th>
+          <th class="p-3">HTTP Status</th>
+          <th class="p-3">Error Type</th>
+          <th class="p-3">Recommendation</th>
+        `;
+
+        issuesList.forEach(item => {
+          const row = document.createElement('tr');
+          row.className = "hover:bg-slate-800/40 transition border-b border-slate-800/40";
+          row.innerHTML = `
+            <td class="p-3 font-semibold text-red-400 code-font max-w-xs truncate">${escapeHtml(item.url || item.target_link)}</td>
+            <td class="p-3"><span class="px-2 py-0.5 rounded font-bold bg-red-600/20 text-red-300 code-font">${item.status_code || 500}</span></td>
+            <td class="p-3 text-slate-300 font-semibold">${escapeHtml(item.error_type)}</td>
+            <td class="p-3 text-slate-400 text-xs">${escapeHtml(item.recommendation)}</td>
+          `;
+          tableBody.appendChild(row);
+        });
+      }
+      else if (activeCategory === 'heading_hierarchy_violations') {
+        headerRow.innerHTML = `
+          <th class="p-3">Page URL</th>
+          <th class="p-3">Structural Flaw</th>
+          <th class="p-3">Details</th>
+          <th class="p-3">Recommendation</th>
+        `;
+
+        issuesList.forEach(item => {
+          const row = document.createElement('tr');
+          row.className = "hover:bg-slate-800/40 transition border-b border-slate-800/40";
+          row.innerHTML = `
+            <td class="p-3 font-semibold text-emerald-300 code-font max-w-xs truncate">${escapeHtml(item.url)}</td>
+            <td class="p-3 font-bold text-emerald-400">${escapeHtml(item.issue)}</td>
+            <td class="p-3 text-slate-300">${escapeHtml(item.details)}</td>
+            <td class="p-3 text-slate-400 text-xs">${escapeHtml(item.recommendation)}</td>
+          `;
+          tableBody.appendChild(row);
+        });
+      }
+
+      lucide.createIcons();
+    }
+
+    function filterTableRows() {
+      const q = document.getElementById('tableSearchInput').value.toLowerCase();
+      const rows = document.querySelectorAll('#tableBody tr');
+      rows.forEach(row => {
+        const txt = row.innerText.toLowerCase();
+        row.style.display = txt.includes(q) ? '' : 'none';
+      });
+    }
+
+    function exportCSV() {
+      if (!currentAuditData) return;
+      const issues = currentAuditData.issues[activeCategory] || [];
+      if (issues.length === 0) {
+        alert("No issues to export for this category!");
+        return;
+      }
+
+      const keys = Object.keys(issues[0]);
+      let csvStr = keys.join(",") + "\n";
+      issues.forEach(row => {
+        csvStr += keys.map(k => `"${String(row[k] || '').replace(/"/g, '""')}"`).join(",") + "\n";
+      });
+
+      const blob = new Blob([csvStr], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `seo_agent_${activeCategory}_report.csv`;
+      a.click();
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+</html>
