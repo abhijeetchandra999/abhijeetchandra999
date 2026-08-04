@@ -1,7 +1,15 @@
-from flask import Flask, render_template, request, jsonify
+import os
+from flask import Flask, render_template, render_template_string, request, jsonify
 from model_engine import train_and_predict
 
-app = Flask(__name__)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Configure template folder explicitly
+template_dir = os.path.join(BASE_DIR, 'OneDrive', 'ドキュメント', 'stock', 'templates')
+if not os.path.exists(template_dir):
+    template_dir = os.path.join(BASE_DIR, 'templates')
+
+app = Flask(__name__, template_folder=template_dir)
 
 POPULAR_STOCKS = [
     {"symbol": "GILLETTE.NS", "name": "Gillette India", "market": "NSE (India)"},
@@ -16,9 +24,27 @@ POPULAR_STOCKS = [
     {"symbol": "GOOGL", "name": "Alphabet Inc.", "market": "NASDAQ (US)"}
 ]
 
+def load_template_content():
+    possible_paths = [
+        os.path.join(BASE_DIR, 'OneDrive', 'ドキュメント', 'stock', 'templates', 'index.html'),
+        os.path.join(BASE_DIR, 'templates', 'index.html'),
+        os.path.join(BASE_DIR, 'index.html')
+    ]
+    for p in possible_paths:
+        if os.path.exists(p):
+            with open(p, 'r', encoding='utf-8') as f:
+                return f.read()
+    return None
+
 @app.route("/")
 def index():
-    return render_template("index.html")
+    try:
+        return render_template("index.html")
+    except Exception:
+        html_content = load_template_content()
+        if html_content:
+            return render_template_string(html_content)
+        return "<h3>Stock Prediction AI Web Dashboard is active. API Endpoint: /api/predict</h3>", 200
 
 @app.route("/api/popular", methods=["GET"])
 def get_popular_stocks():

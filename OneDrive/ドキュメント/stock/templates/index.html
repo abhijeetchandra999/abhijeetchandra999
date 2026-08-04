@@ -93,7 +93,7 @@
                 </div>
             </div>
 
-            <!-- Live Status & Ticker Search Input -->
+            <!-- Live Status -->
             <div class="flex items-center space-x-4">
                 <div class="hidden md:flex items-center space-x-2 text-xs text-slate-400 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800">
                     <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -162,7 +162,7 @@
             </div>
         </div>
 
-        <!-- Dashboard Main View (Shown after prediction) -->
+        <!-- Dashboard Main View -->
         <div id="dashboardView" class="space-y-8">
 
             <!-- Hero Metrics Grid -->
@@ -341,7 +341,6 @@
         let mainChart = null;
         let currentPayload = null;
 
-        // Set default date to today's date
         document.getElementById('targetDate').valueAsDate = new Date();
 
         function selectStock(ticker) {
@@ -364,7 +363,6 @@
             const errorContainer = document.getElementById('errorContainer');
             const predictBtn = document.getElementById('predictBtn');
 
-            // UI State updates
             loadingState.classList.remove('hidden');
             dashboardView.classList.add('hidden');
             errorContainer.classList.add('hidden');
@@ -397,7 +395,6 @@
         function renderDashboard(data) {
             const currSymbol = data.currency === 'INR' ? '₹' : (data.currency === 'USD' ? '$' : data.currency + ' ');
             
-            // Header Cards
             document.getElementById('cardCurrency').innerText = currSymbol;
             document.getElementById('cardPredCurrency').innerText = currSymbol;
             document.getElementById('cardCurrentPrice').innerText = data.current_close.toLocaleString();
@@ -405,7 +402,6 @@
             document.getElementById('cardTicker').innerText = data.ticker + ` (${data.company_name})`;
             document.getElementById('cardTargetDate').innerText = data.prediction_target_date;
 
-            // Change % & Icons
             const changeVal = data.expected_change;
             const changePct = data.expected_change_pct;
             const changeElem = document.getElementById('cardChange');
@@ -426,7 +422,6 @@
                 iconElem.className = "fa-solid fa-arrow-trend-down text-rose-400";
             }
 
-            // Signal Badge
             const signalElem = document.getElementById('cardSignal');
             signalElem.innerText = data.signal;
             if (data.signal_color === 'emerald' || data.signal_color === 'green') {
@@ -437,21 +432,17 @@
                 signalElem.className = "px-3 py-1 rounded-full text-xs font-extrabold bg-slate-800 text-slate-300 border border-slate-700 uppercase tracking-wider";
             }
 
-            // Metrics
             document.getElementById('cardAccuracy').innerText = `${data.metrics.directional_accuracy_pct}%`;
             document.getElementById('cardRmse').innerText = data.metrics.rmse;
 
-            // Target Range
             document.getElementById('targetHigh').innerText = `${currSymbol}${data.predicted_high.toLocaleString()}`;
             document.getElementById('targetLow').innerText = `${currSymbol}${data.predicted_low.toLocaleString()}`;
 
-            // Indicators
             document.getElementById('indRsi').innerText = data.indicators.rsi;
             document.getElementById('indMacd').innerText = data.indicators.macd;
             document.getElementById('indAtr').innerText = data.indicators.atr;
             document.getElementById('indMae').innerText = data.metrics.mae;
 
-            // Render Chart
             renderChart(data);
         }
 
@@ -463,7 +454,6 @@
             const sma20Prices = data.chart_series.map(item => item.sma_20);
             const sma50Prices = data.chart_series.map(item => item.sma_50);
 
-            // Add Prediction Point
             const predLabels = [...labels, data.prediction_target_date];
             const predSeries = new Array(labels.length - 1).fill(null);
             predSeries.push(closePrices[closePrices.length - 1]);
@@ -526,9 +516,7 @@
                         intersect: false,
                     },
                     plugins: {
-                        legend: {
-                            display: false
-                        },
+                        legend: { display: false },
                         tooltip: {
                             backgroundColor: '#0f172a',
                             titleColor: '#f8fafc',
@@ -541,29 +529,17 @@
                     },
                     scales: {
                         x: {
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.04)'
-                            },
-                            ticks: {
-                                color: '#64748b',
-                                font: { family: 'Outfit', size: 10 },
-                                maxTicksLimit: 10
-                            }
+                            grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                            ticks: { color: '#64748b', font: { family: 'Outfit', size: 10 }, maxTicksLimit: 10 }
                         },
                         y: {
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.04)'
-                            },
-                            ticks: {
-                                color: '#64748b',
-                                font: { family: 'JetBrains Mono', size: 10 }
-                            }
+                            grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                            ticks: { color: '#64748b', font: { family: 'JetBrains Mono', size: 10 } }
                         }
                     }
                 }
             });
 
-            // Toggle Listeners
             document.getElementById('toggleSma20').onchange = (e) => {
                 mainChart.data.datasets[1].hidden = !e.target.checked;
                 mainChart.update();
@@ -574,7 +550,6 @@
             };
         }
 
-        // Run default stock on load
         window.addEventListener('DOMContentLoaded', () => {
             runPrediction('GILLETTE.NS');
         });
