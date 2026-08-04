@@ -1,1 +1,1 @@
-web: cd "OneDrive/ドキュメント/stock" && gunicorn app:app
+web: gunicorn app:app
