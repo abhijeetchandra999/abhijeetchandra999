@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Stock Predictor & Quantitative Analytics</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        darkBg: '#0b0f19',
+                        cardBg: '#131b2e',
+                        cardBorder: '#1e293b',
+                        accentViolet: '#8b5cf6',
+                        accentCyan: '#06b6d4',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #080c14;
+            color: #f1f5f9;
+            font-family: 'Outfit', sans-serif;
+        }
+        .glass-card {
+            background: rgba(19, 27, 46, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        .glow-emerald {
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.35);
+        }
+        .glow-rose {
+            box-shadow: 0 0 25px rgba(244, 63, 94, 0.35);
+        }
+        .glow-violet {
+            box-shadow: 0 0 25px rgba(139, 92, 246, 0.35);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b0f19;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-violet-500 selection:text-white">
+
+    <!-- Top Navigation Header -->
+    <header class="border-b border-slate-800 bg-slate-950/80 sticky top-0 z-50 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-600 via-indigo-500 to-cyan-400 p-0.5 shadow-lg shadow-violet-500/20">
+                    <div class="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
+                        <i class="fa-solid fa-chart-line text-violet-400 text-lg"></i>
+                    </div>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                        QuantPredict <span class="text-xs px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-400 border border-violet-500/20 font-medium">AI v2.0</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">Time-Series Ensemble & Technical Analytics</p>
+                </div>
+            </div>
+
+            <!-- Live Status & Ticker Search Input -->
+            <div class="flex items-center space-x-4">
+                <div class="hidden md:flex items-center space-x-2 text-xs text-slate-400 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>Live ML Engine Active</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+        <!-- Controls Card: Search & Quick Selection -->
+        <section class="glass-card rounded-2xl p-6 relative overflow-hidden">
+            <div class="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-violet-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="flex flex-col lg:flex-row gap-6 items-center justify-between">
+                <!-- Search Form -->
+                <form id="searchForm" class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto flex-1">
+                    <div class="relative flex-1">
+                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="tickerInput" value="GILLETTE.NS" placeholder="Enter Stock Symbol (e.g. GILLETTE.NS, AAPL, RELIANCE.NS)"
+                            class="w-full pl-11 pr-4 py-3.5 bg-slate-900/90 border border-slate-700/80 rounded-xl text-white placeholder-slate-500 font-mono text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all uppercase" required>
+                    </div>
+
+                    <div class="relative sm:w-48">
+                        <i class="fa-regular fa-calendar absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="date" id="targetDate" class="w-full pl-11 pr-4 py-3.5 bg-slate-900/90 border border-slate-700/80 rounded-xl text-white text-sm focus:outline-none focus:border-violet-500 transition-all">
+                    </div>
+
+                    <button type="submit" id="predictBtn" class="px-6 py-3.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-medium rounded-xl shadow-lg shadow-violet-600/25 flex items-center justify-center gap-2 transition-all active:scale-95">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>Run Prediction</span>
+                    </button>
+                </form>
+
+                <!-- Quick Stock Pills -->
+                <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+                    <span class="text-xs text-slate-400 font-medium mr-1"><i class="fa-solid fa-fire text-amber-400 mr-1"></i> Popular:</span>
+                    <button type="button" onclick="selectStock('GILLETTE.NS')" class="stock-pill px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-violet-600/20 text-xs font-mono text-slate-300 hover:text-violet-300 border border-slate-700 transition">GILLETTE.NS</button>
+                    <button type="button" onclick="selectStock('RELIANCE.NS')" class="stock-pill px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-violet-600/20 text-xs font-mono text-slate-300 hover:text-violet-300 border border-slate-700 transition">RELIANCE.NS</button>
+                    <button type="button" onclick="selectStock('TCS.NS')" class="stock-pill px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-violet-600/20 text-xs font-mono text-slate-300 hover:text-violet-300 border border-slate-700 transition">TCS.NS</button>
+                    <button type="button" onclick="selectStock('AAPL')" class="stock-pill px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-violet-600/20 text-xs font-mono text-slate-300 hover:text-violet-300 border border-slate-700 transition">AAPL</button>
+                    <button type="button" onclick="selectStock('NVDA')" class="stock-pill px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-violet-600/20 text-xs font-mono text-slate-300 hover:text-violet-300 border border-slate-700 transition">NVDA</button>
+                    <button type="button" onclick="selectStock('TSLA')" class="stock-pill px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-violet-600/20 text-xs font-mono text-slate-300 hover:text-violet-300 border border-slate-700 transition">TSLA</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Loading State Indicator -->
+        <div id="loadingState" class="hidden glass-card rounded-2xl p-12 text-center space-y-4">
+            <div class="inline-block relative">
+                <div class="w-16 h-16 border-4 border-violet-500/20 border-t-violet-500 rounded-full animate-spin"></div>
+                <i class="fa-solid fa-brain absolute inset-0 m-auto text-violet-400 text-lg flex items-center justify-center"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-white">Extracting Data & Training ML Model...</h3>
+            <p class="text-sm text-slate-400 max-w-md mx-auto">Calculating Moving Averages, RSI, MACD, and running XGBoost ensemble prediction pipeline.</p>
+        </div>
+
+        <!-- Error Container -->
+        <div id="errorContainer" class="hidden glass-card rounded-2xl p-6 border-rose-500/30 bg-rose-950/20 text-rose-300 flex items-center gap-4">
+            <i class="fa-solid fa-circle-exclamation text-2xl text-rose-400"></i>
+            <div>
+                <h4 class="font-semibold">Prediction Request Failed</h4>
+                <p id="errorMessage" class="text-sm text-rose-200">Unable to fetch stock data or calculate model forecast.</p>
+            </div>
+        </div>
+
+        <!-- Dashboard Main View (Shown after prediction) -->
+        <div id="dashboardView" class="space-y-8">
+
+            <!-- Hero Metrics Grid -->
+            <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+                <!-- Current Price Card -->
+                <div class="glass-card rounded-2xl p-6 relative overflow-hidden flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between text-slate-400 text-xs font-medium uppercase tracking-wider mb-2">
+                            <span>Current Market Close</span>
+                            <i class="fa-solid fa-clock text-slate-500"></i>
+                        </div>
+                        <div class="flex items-baseline gap-2">
+                            <span id="cardCurrency" class="text-slate-400 font-mono text-sm">₹</span>
+                            <span id="cardCurrentPrice" class="text-3xl font-extrabold font-mono text-white">0.00</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-800/80 flex justify-between items-center text-xs">
+                        <span class="text-slate-400">Ticker Symbol</span>
+                        <span id="cardTicker" class="font-mono text-violet-400 font-semibold">-</span>
+                    </div>
+                </div>
+
+                <!-- Predicted Next Close Card -->
+                <div class="glass-card rounded-2xl p-6 relative overflow-hidden flex flex-col justify-between border-violet-500/30 glow-violet">
+                    <div>
+                        <div class="flex items-center justify-between text-violet-300 text-xs font-medium uppercase tracking-wider mb-2">
+                            <span>AI Forecast Next Close</span>
+                            <i class="fa-solid fa-sparkles text-violet-400"></i>
+                        </div>
+                        <div class="flex items-baseline gap-2">
+                            <span id="cardPredCurrency" class="text-violet-300 font-mono text-sm">₹</span>
+                            <span id="cardPredictedClose" class="text-3xl font-extrabold font-mono text-violet-200">0.00</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-800/80 flex justify-between items-center text-xs">
+                        <span class="text-slate-400">Target Date</span>
+                        <span id="cardTargetDate" class="font-mono text-slate-200 font-semibold">-</span>
+                    </div>
+                </div>
+
+                <!-- Expected Change % & Signal -->
+                <div class="glass-card rounded-2xl p-6 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between text-slate-400 text-xs font-medium uppercase tracking-wider mb-2">
+                            <span>Expected Movement</span>
+                            <i id="changeIcon" class="fa-solid fa-arrow-trend-up text-emerald-400"></i>
+                        </div>
+                        <div class="flex items-baseline gap-2">
+                            <span id="cardChange" class="text-2xl font-bold font-mono text-emerald-400">+0.00</span>
+                            <span id="cardChangePct" class="text-sm font-mono text-emerald-400">(+0.00%)</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-800/80 flex justify-between items-center">
+                        <span class="text-xs text-slate-400">AI Signal</span>
+                        <span id="cardSignal" class="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase tracking-wider">NEUTRAL</span>
+                    </div>
+                </div>
+
+                <!-- Model Accuracy & Reliability -->
+                <div class="glass-card rounded-2xl p-6 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between text-slate-400 text-xs font-medium uppercase tracking-wider mb-2">
+                            <span>Directional Accuracy</span>
+                            <i class="fa-solid fa-bullseye text-cyan-400"></i>
+                        </div>
+                        <div class="flex items-baseline gap-1">
+                            <span id="cardAccuracy" class="text-3xl font-extrabold font-mono text-cyan-400">0.0%</span>
+                            <span class="text-xs text-slate-400">backtest</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-800/80 flex justify-between items-center text-xs">
+                        <span class="text-slate-400">RMSE Error</span>
+                        <span id="cardRmse" class="font-mono text-slate-300">0.00</span>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- Chart & Range Targets Split Grid -->
+            <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                <!-- Main Interactive Price Chart (2 Cols) -->
+                <div class="glass-card rounded-2xl p-6 lg:col-span-2 space-y-4 flex flex-col justify-between">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div>
+                            <h3 id="chartTitle" class="text-lg font-bold text-white flex items-center gap-2">
+                                Historical Prices & AI Forecast
+                            </h3>
+                            <p class="text-xs text-slate-400">Real-time daily close, moving averages, and predicted next target</p>
+                        </div>
+                        <div class="flex items-center space-x-2 text-xs">
+                            <label class="flex items-center gap-1.5 cursor-pointer text-slate-300 bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-slate-800">
+                                <input type="checkbox" id="toggleSma20" checked class="rounded border-slate-700 text-violet-500 focus:ring-0">
+                                <span>SMA (20)</span>
+                            </label>
+                            <label class="flex items-center gap-1.5 cursor-pointer text-slate-300 bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-slate-800">
+                                <input type="checkbox" id="toggleSma50" checked class="rounded border-slate-700 text-amber-500 focus:ring-0">
+                                <span>SMA (50)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Chart Canvas -->
+                    <div class="relative w-full h-[360px]">
+                        <canvas id="priceChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Technical Analytics & Prediction Bounds (1 Col) -->
+                <div class="glass-card rounded-2xl p-6 space-y-6 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-lg font-bold text-white mb-1">Target Bounds & Analytics</h3>
+                        <p class="text-xs text-slate-400">Predicted price range for the target trading session</p>
+                    </div>
+
+                    <!-- Target Price Range Box -->
+                    <div class="bg-slate-900/90 rounded-xl p-4 border border-slate-800 space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-slate-400">Predicted High</span>
+                            <span id="targetHigh" class="font-mono text-emerald-400 font-bold text-base">₹0.00</span>
+                        </div>
+                        <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden flex">
+                            <div class="bg-emerald-400 h-full" style="width: 50%;"></div>
+                            <div class="bg-rose-400 h-full" style="width: 50%;"></div>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-slate-400">Predicted Low</span>
+                            <span id="targetLow" class="font-mono text-rose-400 font-bold text-base">₹0.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Key Technical Indicators Summary -->
+                    <div class="space-y-3">
+                        <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Indicator Readings</h4>
+
+                        <div class="flex justify-between items-center p-3 rounded-lg bg-slate-900/50 border border-slate-800 text-xs">
+                            <span class="text-slate-300">RSI (14-Period Momentum)</span>
+                            <span id="indRsi" class="font-mono font-bold text-white">0.00</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 rounded-lg bg-slate-900/50 border border-slate-800 text-xs">
+                            <span class="text-slate-300">MACD Level</span>
+                            <span id="indMacd" class="font-mono font-bold text-white">0.00</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 rounded-lg bg-slate-900/50 border border-slate-800 text-xs">
+                            <span class="text-slate-300">Average True Range (ATR)</span>
+                            <span id="indAtr" class="font-mono font-bold text-white">0.00</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 rounded-lg bg-slate-900/50 border border-slate-800 text-xs">
+                            <span class="text-slate-300">Model MAE Error</span>
+                            <span id="indMae" class="font-mono font-bold text-slate-300">0.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Disclaimer -->
+                    <p class="text-[10px] text-slate-500 leading-relaxed italic">
+                        *Disclaimer: Forecasts are generated by quantitative machine learning algorithms based on historical market data and technical indicators. Financial trading involves high risk.
+                    </p>
+                </div>
+
+            </section>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-900 bg-slate-950 py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500">
+            <p>© 2026 QuantPredict AI • Developed with Scikit-Learn, XGBoost & Yahoo Finance API</p>
+        </div>
+    </footer>
+
+    <!-- App JavaScript Logic -->
+    <script>
+        let mainChart = null;
+        let currentPayload = null;
+
+        // Set default date to today's date
+        document.getElementById('targetDate').valueAsDate = new Date();
+
+        function selectStock(ticker) {
+            document.getElementById('tickerInput').value = ticker;
+            runPrediction(ticker);
+        }
+
+        document.getElementById('searchForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const ticker = document.getElementById('tickerInput').value.trim();
+            if(ticker) {
+                runPrediction(ticker);
+            }
+        });
+
+        async function runPrediction(ticker) {
+            const dateVal = document.getElementById('targetDate').value;
+            const loadingState = document.getElementById('loadingState');
+            const dashboardView = document.getElementById('dashboardView');
+            const errorContainer = document.getElementById('errorContainer');
+            const predictBtn = document.getElementById('predictBtn');
+
+            // UI State updates
+            loadingState.classList.remove('hidden');
+            dashboardView.classList.add('hidden');
+            errorContainer.classList.add('hidden');
+            predictBtn.disabled = true;
+            predictBtn.classList.add('opacity-75');
+
+            try {
+                const response = await fetch(`/api/predict?ticker=${encodeURIComponent(ticker)}&date=${encodeURIComponent(dateVal)}`);
+                const data = await response.json();
+
+                if (!response.ok || data.error) {
+                    throw new Error(data.error || 'Failed to generate prediction');
+                }
+
+                currentPayload = data;
+                renderDashboard(data);
+                loadingState.classList.add('hidden');
+                dashboardView.classList.remove('hidden');
+
+            } catch (err) {
+                loadingState.classList.add('hidden');
+                errorContainer.classList.remove('hidden');
+                document.getElementById('errorMessage').innerText = err.message || 'Error executing prediction engine.';
+            } finally {
+                predictBtn.disabled = false;
+                predictBtn.classList.remove('opacity-75');
+            }
+        }
+
+        function renderDashboard(data) {
+            const currSymbol = data.currency === 'INR' ? '₹' : (data.currency === 'USD' ? '$' : data.currency + ' ');
+            
+            // Header Cards
+            document.getElementById('cardCurrency').innerText = currSymbol;
+            document.getElementById('cardPredCurrency').innerText = currSymbol;
+            document.getElementById('cardCurrentPrice').innerText = data.current_close.toLocaleString();
+            document.getElementById('cardPredictedClose').innerText = data.predicted_close.toLocaleString();
+            document.getElementById('cardTicker').innerText = data.ticker + ` (${data.company_name})`;
+            document.getElementById('cardTargetDate').innerText = data.prediction_target_date;
+
+            // Change % & Icons
+            const changeVal = data.expected_change;
+            const changePct = data.expected_change_pct;
+            const changeElem = document.getElementById('cardChange');
+            const changePctElem = document.getElementById('cardChangePct');
+            const iconElem = document.getElementById('changeIcon');
+
+            const isPositive = changeVal >= 0;
+            changeElem.innerText = (isPositive ? '+' : '') + changeVal.toFixed(2);
+            changePctElem.innerText = `(${isPositive ? '+' : ''}${changePct.toFixed(2)}%)`;
+
+            if (isPositive) {
+                changeElem.className = "text-2xl font-bold font-mono text-emerald-400";
+                changePctElem.className = "text-sm font-mono text-emerald-400";
+                iconElem.className = "fa-solid fa-arrow-trend-up text-emerald-400";
+            } else {
+                changeElem.className = "text-2xl font-bold font-mono text-rose-400";
+                changePctElem.className = "text-sm font-mono text-rose-400";
+                iconElem.className = "fa-solid fa-arrow-trend-down text-rose-400";
+            }
+
+            // Signal Badge
+            const signalElem = document.getElementById('cardSignal');
+            signalElem.innerText = data.signal;
+            if (data.signal_color === 'emerald' || data.signal_color === 'green') {
+                signalElem.className = "px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase tracking-wider glow-emerald";
+            } else if (data.signal_color === 'rose' || data.signal_color === 'amber') {
+                signalElem.className = "px-3 py-1 rounded-full text-xs font-extrabold bg-rose-500/20 text-rose-300 border border-rose-500/30 uppercase tracking-wider glow-rose";
+            } else {
+                signalElem.className = "px-3 py-1 rounded-full text-xs font-extrabold bg-slate-800 text-slate-300 border border-slate-700 uppercase tracking-wider";
+            }
+
+            // Metrics
+            document.getElementById('cardAccuracy').innerText = `${data.metrics.directional_accuracy_pct}%`;
+            document.getElementById('cardRmse').innerText = data.metrics.rmse;
+
+            // Target Range
+            document.getElementById('targetHigh').innerText = `${currSymbol}${data.predicted_high.toLocaleString()}`;
+            document.getElementById('targetLow').innerText = `${currSymbol}${data.predicted_low.toLocaleString()}`;
+
+            // Indicators
+            document.getElementById('indRsi').innerText = data.indicators.rsi;
+            document.getElementById('indMacd').innerText = data.indicators.macd;
+            document.getElementById('indAtr').innerText = data.indicators.atr;
+            document.getElementById('indMae').innerText = data.metrics.mae;
+
+            // Render Chart
+            renderChart(data);
+        }
+
+        function renderChart(data) {
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            
+            const labels = data.chart_series.map(item => item.date);
+            const closePrices = data.chart_series.map(item => item.close);
+            const sma20Prices = data.chart_series.map(item => item.sma_20);
+            const sma50Prices = data.chart_series.map(item => item.sma_50);
+
+            // Add Prediction Point
+            const predLabels = [...labels, data.prediction_target_date];
+            const predSeries = new Array(labels.length - 1).fill(null);
+            predSeries.push(closePrices[closePrices.length - 1]);
+            predSeries.push(data.predicted_close);
+
+            if (mainChart) {
+                mainChart.destroy();
+            }
+
+            mainChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: predLabels,
+                    datasets: [
+                        {
+                            label: 'Historical Close',
+                            data: [...closePrices, null],
+                            borderColor: '#8b5cf6',
+                            borderWidth: 2.5,
+                            pointRadius: 0,
+                            pointHoverRadius: 4,
+                            tension: 0.1,
+                        },
+                        {
+                            label: 'SMA 20',
+                            data: [...sma20Prices, null],
+                            borderColor: '#06b6d4',
+                            borderWidth: 1.5,
+                            borderDash: [4, 4],
+                            pointRadius: 0,
+                            hidden: !document.getElementById('toggleSma20').checked
+                        },
+                        {
+                            label: 'SMA 50',
+                            data: [...sma50Prices, null],
+                            borderColor: '#f59e0b',
+                            borderWidth: 1.5,
+                            borderDash: [4, 4],
+                            pointRadius: 0,
+                            hidden: !document.getElementById('toggleSma50').checked
+                        },
+                        {
+                            label: 'AI Forecast',
+                            data: predSeries,
+                            borderColor: '#10b981',
+                            borderWidth: 3,
+                            pointRadius: [0, 0, 6],
+                            pointBackgroundColor: '#10b981',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            borderDash: [6, 3]
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: '#0f172a',
+                            titleColor: '#f8fafc',
+                            bodyColor: '#cbd5e1',
+                            borderColor: '#334155',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: true
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.04)'
+                            },
+                            ticks: {
+                                color: '#64748b',
+                                font: { family: 'Outfit', size: 10 },
+                                maxTicksLimit: 10
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.04)'
+                            },
+                            ticks: {
+                                color: '#64748b',
+                                font: { family: 'JetBrains Mono', size: 10 }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Toggle Listeners
+            document.getElementById('toggleSma20').onchange = (e) => {
+                mainChart.data.datasets[1].hidden = !e.target.checked;
+                mainChart.update();
+            };
+            document.getElementById('toggleSma50').onchange = (e) => {
+                mainChart.data.datasets[2].hidden = !e.target.checked;
+                mainChart.update();
+            };
+        }
+
+        // Run default stock on load
+        window.addEventListener('DOMContentLoaded', () => {
+            runPrediction('GILLETTE.NS');
+        });
+    </script>
+</body>
+</html>
