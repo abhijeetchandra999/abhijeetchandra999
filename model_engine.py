@@ -103,6 +103,118 @@ def compute_technical_indicators(df):
     
     return data
 
+def analyze_news_sentiment(stock, ticker):
+    """Fetch live news from yfinance and analyze news sentiment using financial lexicon scoring."""
+    raw_news = []
+    try:
+        raw_news = stock.news or []
+    except Exception:
+        raw_news = []
+
+    pos_words = {
+        'surge', 'gain', 'gains', 'profit', 'profits', 'growth', 'record', 'beat', 'beats', 'rally',
+        'upgrade', 'upgraded', 'high', 'higher', 'expansion', 'strong', 'boom', 'rise', 'rises',
+        'optimistic', 'dividend', 'buy', 'outperform', 'bullish', 'soar', 'soars', 'jump', 'jumps',
+        'revenue', 'success', 'positive', 'breakthrough', 'partner', 'partnership', 'acquisition'
+    }
+    neg_words = {
+        'fall', 'falls', 'loss', 'losses', 'drop', 'drops', 'decline', 'declines', 'crash', 'crashes',
+        'lawsuit', 'deficit', 'warning', 'downgrade', 'downgraded', 'plunge', 'plunges', 'cut', 'cuts',
+        'risk', 'risks', 'fear', 'fears', 'inquiry', 'default', 'penalty', 'slump', 'debt', 'lower',
+        'bearish', 'weak', 'struggle', 'struggles', 'investigation', 'layoff', 'layoffs', 'ban'
+    }
+
+    processed_news = []
+    total_score = 0.0
+
+    for item in raw_news:
+        title = ""
+        publisher = ""
+        link = "#"
+        pub_time = "Recent"
+
+        if isinstance(item, dict):
+            content = item.get('content', item) if isinstance(item.get('content'), dict) else item
+            title = content.get('title', '')
+            publisher = content.get('provider', {}).get('displayName') if isinstance(content.get('provider'), dict) else content.get('publisher', 'Financial News')
+            pub_time_val = content.get('pubDate') or content.get('providerPublishTime')
+            if pub_time_val:
+                try:
+                    if isinstance(pub_time_val, (int, float)):
+                        pub_time = datetime.fromtimestamp(pub_time_val).strftime('%Y-%m-%d %H:%M')
+                    else:
+                        pub_time = str(pub_time_val)[:16].replace('T', ' ')
+                except Exception:
+                    pub_time = "Recent"
+            
+            canonical_url = content.get('canonicalUrl') or content.get('clickThroughUrl')
+            if isinstance(canonical_url, dict):
+                link = canonical_url.get('url', '#')
+            elif isinstance(canonical_url, str):
+                link = canonical_url
+            else:
+                link = item.get('link', '#')
+
+        if not title:
+            continue
+
+        words = [w.strip(".,!?\"'()[]").lower() for w in title.split()]
+        pos_count = sum(1 for w in words if w in pos_words)
+        neg_count = sum(1 for w in words if w in neg_words)
+
+        if pos_count > neg_count:
+            sentiment = "BULLISH"
+            sentiment_color = "emerald"
+            score = 1.0
+        elif neg_count > pos_count:
+            sentiment = "BEARISH"
+            sentiment_color = "rose"
+            score = -1.0
+        else:
+            sentiment = "NEUTRAL"
+            sentiment_color = "slate"
+            score = 0.0
+
+        total_score += score
+        processed_news.append({
+            "title": title,
+            "publisher": publisher or "Financial News",
+            "pub_time": pub_time,
+            "link": link,
+            "sentiment": sentiment,
+            "sentiment_color": sentiment_color
+        })
+
+    news_count = len(processed_news)
+    if news_count > 0:
+        avg_score = total_score / news_count
+        bullish_pct = round(sum(1 for n in processed_news if n['sentiment'] == 'BULLISH') / news_count * 100, 1)
+        bearish_pct = round(sum(1 for n in processed_news if n['sentiment'] == 'BEARISH') / news_count * 100, 1)
+        neutral_pct = round(100 - bullish_pct - bearish_pct, 1)
+    else:
+        avg_score = 0.0
+        bullish_pct, bearish_pct, neutral_pct = 33.3, 33.3, 33.4
+
+    if avg_score > 0.2:
+        overall_news_sentiment = "BULLISH"
+        overall_news_color = "emerald"
+    elif avg_score < -0.2:
+        overall_news_sentiment = "BEARISH"
+        overall_news_color = "rose"
+    else:
+        overall_news_sentiment = "NEUTRAL"
+        overall_news_color = "amber"
+
+    return {
+        "overall_sentiment": overall_news_sentiment,
+        "overall_color": overall_news_color,
+        "sentiment_score": round(avg_score, 2),
+        "bullish_pct": bullish_pct,
+        "bearish_pct": bearish_pct,
+        "neutral_pct": neutral_pct,
+        "articles": processed_news[:6]
+    }
+
 def train_and_predict(ticker, target_date_str=None):
     """
     Main function to load stock data, perform feature engineering, train an ensemble model,
@@ -111,6 +223,15 @@ def train_and_predict(ticker, target_date_str=None):
     df, info = fetch_stock_data(ticker, period="3y")
     data = compute_technical_indicators(df)
     
+    if target_date_str:
+        try:
+            target_dt = pd.to_datetime(target_date_str)
+            filtered_data = data[data['Date'] <= target_dt].copy()
+            if len(filtered_data) >= 100:
+                data = filtered_data
+        except Exception:
+            pass
+
     feature_cols = [
         'Close', 'High', 'Low', 'Volume', 'Return', 'Log_Volume',
         'SMA_10', 'SMA_20', 'SMA_50', 'EMA_12', 'EMA_26',
@@ -186,23 +307,64 @@ def train_and_predict(ticker, target_date_str=None):
     expected_change = float(pred_next_close - current_close)
     expected_change_pct = float((expected_change / current_close) * 100)
     
-    # Trading Signal Determination
+    # Technical Signal Determination
     rsi_val = float(latest_row['RSI']) if not np.isnan(latest_row['RSI']) else 50.0
     if expected_change_pct > 1.2 and rsi_val < 70:
-        signal = "STRONG BUY"
-        signal_color = "emerald"
+        tech_signal = "STRONG BUY"
+        tech_score = 1.0
     elif expected_change_pct > 0.3:
-        signal = "BUY"
-        signal_color = "green"
+        tech_signal = "BUY"
+        tech_score = 0.5
     elif expected_change_pct < -1.2 and rsi_val > 30:
-        signal = "STRONG SELL"
-        signal_color = "rose"
+        tech_signal = "STRONG SELL"
+        tech_score = -1.0
     elif expected_change_pct < -0.3:
-        signal = "SELL"
-        signal_color = "amber"
+        tech_signal = "SELL"
+        tech_score = -0.5
     else:
-        signal = "NEUTRAL / HOLD"
-        signal_color = "slate"
+        tech_signal = "NEUTRAL / HOLD"
+        tech_score = 0.0
+
+    # News & Sentiment Analysis
+    stock_obj = yf.Ticker(ticker)
+    news_analysis = analyze_news_sentiment(stock_obj, ticker)
+    news_score = news_analysis['sentiment_score']  # Range: -1.0 to +1.0
+
+    # Multi-Factor Synthesis AI Recommendation (60% Technical ML + 40% News Sentiment)
+    combined_score = (0.6 * tech_score) + (0.4 * news_score)
+
+    if combined_score >= 0.4:
+        ai_recommendation = "STRONG BUY"
+        ai_color = "emerald"
+    elif combined_score >= 0.15:
+        ai_recommendation = "BUY"
+        ai_color = "green"
+    elif combined_score <= -0.4:
+        ai_recommendation = "STRONG SELL"
+        ai_color = "rose"
+    elif combined_score <= -0.15:
+        ai_recommendation = "SELL"
+        ai_color = "amber"
+    else:
+        ai_recommendation = "NEUTRAL / HOLD"
+        ai_color = "slate"
+
+    # Dynamic AI Reasoning Synthesis
+    reasons = []
+    reasons.append(f"Historical ML ensemble predicts a {expected_change_pct:+.2f}% price movement for next trading session.")
+    if rsi_val > 70:
+        reasons.append(f"RSI indicator is at {rsi_val:.1f} (Overbought zone - exercise caution).")
+    elif rsi_val < 30:
+        reasons.append(f"RSI indicator is at {rsi_val:.1f} (Oversold zone - potential bounce).")
+    else:
+        reasons.append(f"RSI is neutral at {rsi_val:.1f}.")
+
+    if news_analysis['articles']:
+        reasons.append(f"Market news sentiment is currently {news_analysis['overall_sentiment']} based on {len(news_analysis['articles'])} recent headlines.")
+    else:
+        reasons.append("No recent high-impact market news found; decision relies primarily on historical technical momentum.")
+
+    ai_reasoning_summary = " ".join(reasons)
 
     # Prepare Historical Chart Series (last 180 trading days)
     recent_data = data.iloc[-180:].copy()
@@ -229,6 +391,66 @@ def train_and_predict(ticker, target_date_str=None):
     if next_date.weekday() >= 5:  # Weekend shift
         next_date += timedelta(days=(7 - next_date.weekday()))
 
+    # Intraday Pivot Points & Trade Setup Calculations
+    latest_high = float(latest_row['High']) if not np.isnan(latest_row['High']) else current_close * 1.01
+    latest_low = float(latest_row['Low']) if not np.isnan(latest_row['Low']) else current_close * 0.99
+    atr_val = float(latest_row['ATR']) if not np.isnan(latest_row['ATR']) and float(latest_row['ATR']) > 0 else (latest_high - latest_low)
+
+    pivot = (latest_high + latest_low + current_close) / 3.0
+    r1 = (2.0 * pivot) - latest_low
+    s1 = (2.0 * pivot) - latest_high
+    r2 = pivot + (latest_high - latest_low)
+    s2 = pivot - (latest_high - latest_low)
+
+    if ai_recommendation in ["STRONG BUY", "BUY"]:
+        intraday_action = "INTRADAY LONG (BUY)"
+        intraday_color = "emerald"
+        entry_min = round(min(current_close * 0.997, s1), 2)
+        entry_max = round(current_close * 1.002, 2)
+        stop_loss = round(current_close - (1.2 * atr_val), 2)
+        target_1 = round(current_close + (1.2 * atr_val), 2)
+        target_2 = round(current_close + (2.2 * atr_val), 2)
+        risk = max(current_close - stop_loss, 0.01)
+        reward = max(target_1 - current_close, 0.01)
+        rr_ratio = round(reward / risk, 2)
+    elif ai_recommendation in ["STRONG SELL", "SELL"]:
+        intraday_action = "INTRADAY SHORT (SELL)"
+        intraday_color = "rose"
+        entry_min = round(current_close * 0.998, 2)
+        entry_max = round(max(current_close * 1.003, r1), 2)
+        stop_loss = round(current_close + (1.2 * atr_val), 2)
+        target_1 = round(current_close - (1.2 * atr_val), 2)
+        target_2 = round(current_close - (2.2 * atr_val), 2)
+        risk = max(stop_loss - current_close, 0.01)
+        reward = max(current_close - target_1, 0.01)
+        rr_ratio = round(reward / risk, 2)
+    else:
+        intraday_action = "STAND-BY (RANGE-BOUND)"
+        intraday_color = "amber"
+        entry_min = round(s1, 2)
+        entry_max = round(r1, 2)
+        stop_loss = round(s2, 2)
+        target_1 = round(r1, 2)
+        target_2 = round(r2, 2)
+        rr_ratio = 1.0
+
+    intraday_setup = {
+        "action": intraday_action,
+        "color": intraday_color,
+        "entry_range": f"{entry_min:.2f} - {entry_max:.2f}",
+        "stop_loss": stop_loss,
+        "target_1": target_1,
+        "target_2": target_2,
+        "rr_ratio": f"1 : {rr_ratio:.1f}",
+        "pivot_points": {
+            "r2": round(r2, 2),
+            "r1": round(r1, 2),
+            "pivot": round(pivot, 2),
+            "s1": round(s1, 2),
+            "s2": round(s2, 2)
+        }
+    }
+
     prediction_payload = {
         "ticker": ticker.upper(),
         "company_name": info.get('longName') or info.get('shortName') or ticker,
@@ -241,8 +463,12 @@ def train_and_predict(ticker, target_date_str=None):
         "predicted_low": round(pred_next_low, 2),
         "expected_change": round(expected_change, 2),
         "expected_change_pct": round(expected_change_pct, 2),
-        "signal": signal,
-        "signal_color": signal_color,
+        "signal": ai_recommendation,
+        "signal_color": ai_color,
+        "technical_signal": tech_signal,
+        "ai_reasoning": ai_reasoning_summary,
+        "news_analysis": news_analysis,
+        "intraday_setup": intraday_setup,
         "metrics": {
             "mae": round(mae, 2),
             "rmse": round(rmse, 2),
@@ -260,3 +486,10 @@ def train_and_predict(ticker, target_date_str=None):
     }
     
     return prediction_payload
+
+if __name__ == "__main__":
+    import sys
+    symbol = sys.argv[1] if len(sys.argv) > 1 else "GILLETTE.NS"
+    print(f"Testing Prediction Engine for {symbol}...")
+    res = train_and_predict(symbol)
+    print(f"Signal: {res['signal']} | Current: {res['current_close']} -> Predicted Next Close: {res['predicted_close']} ({res['expected_change_pct']}%)")

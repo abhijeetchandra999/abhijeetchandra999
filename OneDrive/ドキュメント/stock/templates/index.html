@@ -325,6 +325,149 @@
 
             </section>
 
+            <!-- Market News Sentiment & AI Recommendation Breakdown Section -->
+            <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                <!-- AI Decision Synthesis & Reasoning Card (1 Col) -->
+                <div class="glass-card rounded-2xl p-6 space-y-4 flex flex-col justify-between border-violet-500/30">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-brain text-violet-400"></i> AI Decision Breakdown
+                            </h3>
+                            <span id="aiRecommendationBadge" class="px-3 py-1 rounded-full text-xs font-extrabold bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                                -
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-400 mb-4">Multi-factor recommendation combining 60% historical technical ML momentum + 40% live market news sentiment.</p>
+                        
+                        <div class="bg-slate-900/90 rounded-xl p-4 border border-slate-800 space-y-3">
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="text-slate-400">Technical ML Signal:</span>
+                                <span id="techSignalVal" class="font-bold text-white font-mono">-</span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="text-slate-400">Live News Sentiment:</span>
+                                <span id="newsSentimentVal" class="font-bold text-emerald-400 font-mono">-</span>
+                            </div>
+                            <div class="pt-2 border-t border-slate-800 text-xs text-slate-300 leading-relaxed" id="aiReasoningText">
+                                Extracting AI reasoning...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Market News & Sentiment Breakdown (2 Cols) -->
+                <div class="glass-card rounded-2xl p-6 lg:col-span-2 space-y-4">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-newspaper text-cyan-400"></i> Market News & Sentiment Analysis
+                            </h3>
+                            <p class="text-xs text-slate-400">Real-time financial news headlines and sentiment scoring</p>
+                        </div>
+                        
+                        <!-- Sentiment Bar -->
+                        <div class="flex items-center gap-2 text-xs font-mono bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800">
+                            <span class="text-emerald-400"><i class="fa-solid fa-face-smile"></i> <span id="sentBullishPct">0%</span> Bullish</span>
+                            <span class="text-slate-500">•</span>
+                            <span class="text-rose-400"><i class="fa-solid fa-face-frown"></i> <span id="sentBearishPct">0%</span> Bearish</span>
+                        </div>
+                    </div>
+
+                    <!-- News Articles List -->
+                    <div id="newsList" class="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+                        <!-- JS renders news items here -->
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- Dedicated Intraday Trading Setup Section -->
+            <section class="glass-card rounded-2xl p-6 relative overflow-hidden border-cyan-500/30 space-y-6">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                    <div>
+                        <h3 class="text-xl font-extrabold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-bolt text-amber-400"></i> Intraday Execution Plan & Risk Management
+                        </h3>
+                        <p class="text-xs text-slate-400">Same-day entry setup, Stop Loss (SL), Profit Targets (TP1 & TP2), and Pivot Point levels</p>
+                    </div>
+                    <span id="intradayActionBadge" class="px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-lg">
+                        INTRADAY LONG (BUY)
+                    </span>
+                </div>
+
+                <!-- 4-Card Intraday Matrix -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+                    <!-- Entry Zone -->
+                    <div class="bg-slate-900/90 rounded-xl p-4 border border-slate-800 space-y-1">
+                        <div class="text-[11px] text-slate-400 uppercase font-semibold">Suggested Entry Zone</div>
+                        <div id="intraEntryRange" class="text-xl font-bold font-mono text-cyan-400">₹0.00 - ₹0.00</div>
+                        <div class="text-[10px] text-slate-500">Optimal execution price window</div>
+                    </div>
+
+                    <!-- Stop Loss -->
+                    <div class="bg-slate-900/90 rounded-xl p-4 border border-rose-500/30 space-y-1 bg-rose-950/10">
+                        <div class="text-[11px] text-rose-300 uppercase font-semibold flex justify-between">
+                            <span>Stop-Loss (SL)</span>
+                            <i class="fa-solid fa-shield-halved text-rose-400"></i>
+                        </div>
+                        <div id="intraStopLoss" class="text-xl font-bold font-mono text-rose-400">₹0.00</div>
+                        <div class="text-[10px] text-rose-300/70">Strict risk exit barrier</div>
+                    </div>
+
+                    <!-- Target 1 & 2 -->
+                    <div class="bg-slate-900/90 rounded-xl p-4 border border-emerald-500/30 space-y-1 bg-emerald-950/10">
+                        <div class="text-[11px] text-emerald-300 uppercase font-semibold flex justify-between">
+                            <span>Intraday Targets</span>
+                            <i class="fa-solid fa-bullseye text-emerald-400"></i>
+                        </div>
+                        <div class="text-xs font-mono text-emerald-300">
+                            TP1: <span id="intraTarget1" class="font-bold text-sm text-white">₹0.00</span>
+                        </div>
+                        <div class="text-xs font-mono text-emerald-400">
+                            TP2: <span id="intraTarget2" class="font-bold text-sm text-emerald-400">₹0.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Risk / Reward Ratio -->
+                    <div class="bg-slate-900/90 rounded-xl p-4 border border-slate-800 space-y-1">
+                        <div class="text-[11px] text-slate-400 uppercase font-semibold">Risk : Reward Ratio</div>
+                        <div id="intraRrRatio" class="text-xl font-bold font-mono text-amber-400">1 : 2.0</div>
+                        <div class="text-[10px] text-slate-500">Calculated R:R metric</div>
+                    </div>
+
+                </div>
+
+                <!-- Pivot Points Table -->
+                <div class="space-y-2">
+                    <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Daily Pivot Point Support & Resistance Levels</h4>
+                    <div class="grid grid-cols-5 gap-2 text-center text-xs font-mono">
+                        <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800">
+                            <div class="text-[10px] text-slate-500">Support 2 (S2)</div>
+                            <div id="pivotS2" class="font-bold text-slate-300 mt-1">₹0.00</div>
+                        </div>
+                        <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800">
+                            <div class="text-[10px] text-slate-500">Support 1 (S1)</div>
+                            <div id="pivotS1" class="font-bold text-slate-300 mt-1">₹0.00</div>
+                        </div>
+                        <div class="bg-slate-900 p-2.5 rounded-lg border border-violet-500/40 bg-violet-950/20">
+                            <div class="text-[10px] text-violet-400 font-bold">Pivot (P)</div>
+                            <div id="pivotP" class="font-bold text-violet-300 mt-1">₹0.00</div>
+                        </div>
+                        <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800">
+                            <div class="text-[10px] text-slate-500">Resistance 1 (R1)</div>
+                            <div id="pivotR1" class="font-bold text-slate-300 mt-1">₹0.00</div>
+                        </div>
+                        <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800">
+                            <div class="text-[10px] text-slate-500">Resistance 2 (R2)</div>
+                            <div id="pivotR2" class="font-bold text-slate-300 mt-1">₹0.00</div>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
         </div>
 
     </main>
@@ -442,6 +585,94 @@
             document.getElementById('indMacd').innerText = data.indicators.macd;
             document.getElementById('indAtr').innerText = data.indicators.atr;
             document.getElementById('indMae').innerText = data.metrics.mae;
+
+            // AI Decision & Reasoning Breakdown
+            const aiBadge = document.getElementById('aiRecommendationBadge');
+            aiBadge.innerText = data.signal;
+            aiBadge.className = `px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider ${
+                data.signal_color === 'emerald' || data.signal_color === 'green' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' :
+                data.signal_color === 'rose' || data.signal_color === 'amber' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' :
+                'bg-slate-800 text-slate-300 border border-slate-700'
+            }`;
+
+            document.getElementById('techSignalVal').innerText = data.technical_signal || data.signal;
+            
+            const newsInfo = data.news_analysis || {};
+            const newsSentVal = document.getElementById('newsSentimentVal');
+            newsSentVal.innerText = newsInfo.overall_sentiment || 'NEUTRAL';
+            newsSentVal.className = `font-bold font-mono ${
+                newsInfo.overall_color === 'emerald' ? 'text-emerald-400' :
+                newsInfo.overall_color === 'rose' ? 'text-rose-400' : 'text-amber-400'
+            }`;
+
+            document.getElementById('aiReasoningText').innerText = data.ai_reasoning || 'Multi-factor quantitative evaluation complete.';
+
+            // Render Sentiment percentages
+            document.getElementById('sentBullishPct').innerText = `${newsInfo.bullish_pct || 0}%`;
+            document.getElementById('sentBearishPct').innerText = `${newsInfo.bearish_pct || 0}%`;
+
+            // Render News List
+            const newsListContainer = document.getElementById('newsList');
+            newsListContainer.innerHTML = '';
+            
+            const articles = newsInfo.articles || [];
+            if (articles.length === 0) {
+                newsListContainer.innerHTML = `
+                    <div class="p-4 rounded-xl bg-slate-900/50 border border-slate-800 text-center text-xs text-slate-400">
+                        No recent major financial news found for ticker <strong>${data.ticker}</strong>. Prediction relies on technical quantitative indicators.
+                    </div>
+                `;
+            } else {
+                articles.forEach(article => {
+                    const badgeClass = article.sentiment_color === 'emerald' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                                       article.sentiment_color === 'rose' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' :
+                                       'bg-slate-800 text-slate-400 border-slate-700';
+
+                    const itemHtml = `
+                        <div class="p-3.5 rounded-xl bg-slate-900/70 border border-slate-800 hover:border-slate-700 transition flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                            <div class="space-y-1">
+                                <a href="${article.link}" target="_blank" rel="noopener noreferrer" class="text-xs font-semibold text-slate-200 hover:text-violet-400 transition line-clamp-1">
+                                    ${article.title} <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-1 text-slate-500"></i>
+                                </a>
+                                <div class="flex items-center space-x-3 text-[11px] text-slate-400 font-mono">
+                                    <span><i class="fa-regular fa-building mr-1"></i>${article.publisher}</span>
+                                    <span>•</span>
+                                    <span><i class="fa-regular fa-clock mr-1"></i>${article.pub_time}</span>
+                                </div>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-md text-[10px] font-mono font-bold border uppercase shrink-0 ${badgeClass}">
+                                ${article.sentiment}
+                            </span>
+                        </div>
+                    `;
+                    newsListContainer.insertAdjacentHTML('beforeend', itemHtml);
+                });
+            }
+
+            // Render Intraday Setup & Risk Management
+            const intraSetup = data.intraday_setup || {};
+            const intraBadge = document.getElementById('intradayActionBadge');
+            if (intraSetup.action) {
+                intraBadge.innerText = intraSetup.action;
+                intraBadge.className = `px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider shadow-lg ${
+                    intraSetup.color === 'emerald' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' :
+                    intraSetup.color === 'rose' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' :
+                    'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                }`;
+            }
+
+            document.getElementById('intraEntryRange').innerText = intraSetup.entry_range ? `${currSymbol}${intraSetup.entry_range}` : '-';
+            document.getElementById('intraStopLoss').innerText = intraSetup.stop_loss ? `${currSymbol}${intraSetup.stop_loss.toLocaleString()}` : '-';
+            document.getElementById('intraTarget1').innerText = intraSetup.target_1 ? `${currSymbol}${intraSetup.target_1.toLocaleString()}` : '-';
+            document.getElementById('intraTarget2').innerText = intraSetup.target_2 ? `${currSymbol}${intraSetup.target_2.toLocaleString()}` : '-';
+            document.getElementById('intraRrRatio').innerText = intraSetup.rr_ratio || '-';
+
+            const pivots = intraSetup.pivot_points || {};
+            document.getElementById('pivotS2').innerText = pivots.s2 ? `${currSymbol}${pivots.s2.toLocaleString()}` : '-';
+            document.getElementById('pivotS1').innerText = pivots.s1 ? `${currSymbol}${pivots.s1.toLocaleString()}` : '-';
+            document.getElementById('pivotP').innerText = pivots.pivot ? `${currSymbol}${pivots.pivot.toLocaleString()}` : '-';
+            document.getElementById('pivotR1').innerText = pivots.r1 ? `${currSymbol}${pivots.r1.toLocaleString()}` : '-';
+            document.getElementById('pivotR2').innerText = pivots.r2 ? `${currSymbol}${pivots.r2.toLocaleString()}` : '-';
 
             renderChart(data);
         }
