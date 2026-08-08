@@ -1,0 +1,12 @@
+# Vercel deployment ignore file
+# Ignore Python scripts and large data files from Vercel function bundler
+build_data.py
+lead link (1).xlsx
+excel_dump.txt
+report_sheet.json
+data_7_aug_parsed.json
+data_7_aug_structured.json
+data_7_aug_full.json
+__pycache__/
+*.xlsx
+*.txt
