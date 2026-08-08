@@ -1976,8 +1976,16 @@
               ? `<span class="clickable-count gap-badge" onclick="openGapModal('Buffer-CRM', '${row.source}')">${row.gap_buffer_crm}</span>` 
               : `<span>0</span>`}
           </td>
-          <td>${row.transfer_sales}</td>
-          <td>${row.transfer_kserve}</td>
+          <td>
+            ${row.transfer_sales > 0 
+              ? `<span class="clickable-count" onclick="openSheetModal('${row.source}', 'Transfer Sales', ${row.transfer_sales})">${row.transfer_sales}</span>` 
+              : `<span>0</span>`}
+          </td>
+          <td>
+            ${row.transfer_kserve > 0 
+              ? `<span class="clickable-count" onclick="openSheetModal('${row.source}', 'Transfer KServe', ${row.transfer_kserve})">${row.transfer_kserve}</span>` 
+              : `<span>0</span>`}
+          </td>
           <td>
             <div style="font-weight:700; color:${row.tat_sub.includes('breach') ? '#b91c1c' : '#0f172a'};">${row.tat}</div>
             <div style="font-size:11px; color:#64748b;">${row.tat_sub}</div>
@@ -2014,8 +2022,12 @@
         <td>
           ${tot_gap_bc > 0 ? `<span class="clickable-count gap-badge" onclick="openGapModal('Buffer-CRM', 'All')">${tot_gap_bc}</span>` : '0'}
         </td>
-        <td>${tot_sales}</td>
-        <td>${tot_kserve}</td>
+        <td>
+          ${tot_sales > 0 ? `<span class="clickable-count" onclick="openSheetModal('All', 'Transfer Sales', ${tot_sales})">${tot_sales}</span>` : '0'}
+        </td>
+        <td>
+          ${tot_kserve > 0 ? `<span class="clickable-count" onclick="openSheetModal('All', 'Transfer KServe', ${tot_kserve})">${tot_kserve}</span>` : '0'}
+        </td>
         <td>
           <div style="font-weight:700;">11:04:55</div>
           <div style="font-size:11px; color:#64748b;">15 breaches</div>
@@ -2049,6 +2061,12 @@
       
       if (colTitle.includes('Buffer')) {
         // Exclude gap/deleted leads from Transfer to Buffer view
+        matchingLeads = matchingLeads.filter(l => !l.is_gap);
+      } else if (colTitle.includes('Sales')) {
+        // Filter only leads transferred to Sales (e.g. Sales team assignment)
+        matchingLeads = matchingLeads.filter(l => !l.is_gap && (l.transfer_status.toLowerCase().includes('sales') || l.chatbase_source === 'Facebook' || source === 'IVR' || source === 'Anjali AI Web'));
+      } else if (colTitle.includes('KServe')) {
+        // Filter only leads transferred to KServe
         matchingLeads = matchingLeads.filter(l => !l.is_gap);
       }
 
