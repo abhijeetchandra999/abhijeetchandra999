@@ -1,0 +1,2381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LeadGuard - CRM Reconciliation Command Center</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --bg-main: #f4f7f6;
+      --bg-card: #ffffff;
+      --sidebar-bg: #0b1a20;
+      --sidebar-text: #94a3b8;
+      --sidebar-active: #132a32;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --brand-green: #0d9488;
+      --brand-green-light: #e6f4f1;
+      --alert-pink: #fef2f2;
+      --alert-pink-border: #fecaca;
+      --alert-red-text: #b91c1c;
+      --badge-yellow-bg: #fef9c3;
+      --badge-yellow-text: #854d0e;
+      --badge-green-bg: #dcfce7;
+      --badge-green-text: #15803d;
+      --badge-red-bg: #fee2e2;
+      --badge-red-text: #991b1b;
+      --table-header-bg: #f8fafc;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Sidebar Styling */
+    aside {
+      width: 240px;
+      background-color: var(--sidebar-bg);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .brand-header {
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      background: #10b981;
+      color: white;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+    
+    .brand-subtitle {
+      font-size: 11px;
+      color: #64748b;
+    }
+
+    .nav-list {
+      list-style: none;
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .nav-item a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .nav-item.active a, .nav-item a:hover {
+      background-color: var(--sidebar-active);
+      color: #ffffff;
+    }
+
+    .nav-badge {
+      margin-left: auto;
+      background: #ef4444;
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 10px;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    /* Main Container */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .top-bar {
+      padding: 20px 32px 0 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .breadcrumb {
+      font-size: 11px;
+      font-weight: 700;
+      color: #94a3b8;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: -0.5px;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .live-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: white;
+      border: 1px solid #e2e8f0;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      background: #10b981;
+      border-radius: 50%;
+    }
+
+    .btn-refresh {
+      background: #0d9488;
+      color: white;
+      border: none;
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    /* Content Area */
+    .content-area {
+      padding: 20px 32px 32px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Banner Alert */
+    .banner-alert {
+      background-color: #fff5f5;
+      border: 1px solid #fee2e2;
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .banner-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .alert-icon-circle {
+      width: 36px;
+      height: 36px;
+      background: #fee2e2;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #dc2626;
+    }
+
+    .banner-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #991b1b;
+    }
+
+    .banner-desc {
+      font-size: 13px;
+      color: #7f1d1d;
+      margin-top: 2px;
+    }
+
+    .banner-link {
+      color: #dc2626;
+      font-weight: 600;
+      font-size: 14px;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .search-input-wrapper {
+      position: relative;
+      flex: 1;
+      min-width: 240px;
+    }
+
+    .search-input-wrapper i {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+      width: 16px;
+      height: 16px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 10px 14px 10px 40px;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .filter-select {
+      background: white;
+      border: 1px solid #e2e8f0;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #334155;
+      outline: none;
+      cursor: pointer;
+      min-width: 130px;
+    }
+
+    .filter-clear {
+      color: #64748b;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      padding: 0 8px;
+    }
+
+    /* KPI Summary Cards */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .kpi-card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 105px;
+
+    }
+
+    .kpi-card.alert-card {
+      border-color: #fecaca;
+      background: #fffbfb;
+    }
+
+    .kpi-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .kpi-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .kpi-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .kpi-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 6px;
+    }
+
+    .kpi-sub {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+
+    /* Table Container */
+    .table-container {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+
+    .table-header-title {
+      padding: 20px 24px 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .sub-breadcrumb {
+      font-size: 11px;
+      font-weight: 700;
+      color: #94a3b8;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .main-table-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 2px;
+    }
+
+    .table-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    /* Responsive Scrollable Table */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    table.data-table th {
+      background-color: #f8fafc;
+      padding: 12px 16px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    table.data-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #1e293b;
+      font-weight: 500;
+    }
+
+    table.data-table tr:hover {
+      background-color: #f8fafc;
+    }
+
+    table.data-table tr.total-row {
+      background-color: #f8fafc;
+      font-weight: 700;
+    }
+
+    table.data-table tr.total-row td {
+      border-top: 2px solid #e2e8f0;
+      color: #0f172a;
+    }
+
+    .source-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+    }
+
+    .source-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #e2e8f0;
+      color: #475569;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Interactive Clickable Badges */
+    .clickable-count {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .clickable-count:hover {
+      opacity: 0.8;
+      transform: scale(1.05);
+    }
+
+    .gap-badge {
+      background: var(--badge-red-bg);
+      color: var(--badge-red-text);
+      text-decoration: none;
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-pill.breach {
+      background: var(--badge-yellow-bg);
+      color: var(--badge-yellow-text);
+    }
+
+    .status-pill.lost {
+      background: var(--badge-red-bg);
+      color: var(--badge-red-text);
+    }
+
+    .status-pill.reconciled {
+      background: var(--badge-green-bg);
+      color: var(--badge-green-text);
+    }
+
+    .status-pill.audit {
+      background: #f1f5f9;
+      color: #475569;
+    }
+
+    .table-footer-legend {
+      padding: 14px 24px;
+      background: #fafafa;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: #64748b;
+    }
+
+    .legend-items {
+      display: flex;
+      gap: 16px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    /* Modal Backdrop */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(5px);
+      z-index: 1000;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    /* Responsive Design for Mobile & Tablet */
+    @media (max-width: 900px) {
+      body {
+        flex-direction: column;
+      }
+
+      aside {
+        width: 100%;
+        height: auto;
+      }
+
+      .brand-header {
+        padding: 14px 20px;
+      }
+
+      .nav-list {
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 8px 12px;
+      }
+
+      .nav-item a {
+        white-space: nowrap;
+        font-size: 13px;
+        padding: 8px 12px;
+      }
+
+      .sidebar-footer {
+        display: none;
+      }
+
+      main {
+        height: auto;
+        overflow-y: visible;
+      }
+
+      .top-bar {
+        padding: 16px 20px 0 20px;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .top-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .content-area {
+        padding: 16px 20px 24px 20px;
+        gap: 16px;
+      }
+
+      .banner-alert {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .banner-link {
+        align-self: flex-end;
+      }
+
+      .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .search-input-wrapper {
+        width: 100%;
+      }
+
+      .filter-select {
+        width: 100%;
+      }
+
+      .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .modal-backdrop {
+        padding: 10px;
+      }
+
+      .modal-drawer {
+        max-width: 100%;
+        max-height: 95vh;
+        border-radius: 8px;
+      }
+
+      .modal-header {
+        padding: 16px;
+      }
+
+      .modal-body {
+        padding: 16px;
+      }
+
+      .recon-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 500px) {
+      .kpi-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .recon-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-header {
+      padding: 24px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+
+    }
+
+    .modal-subtitle {
+      font-size: 11px;
+      font-weight: 700;
+      color: #94a3b8;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 2px;
+    }
+
+    .btn-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #64748b;
+      padding: 4px;
+      border-radius: 6px;
+    }
+
+    .btn-close:hover {
+      background: #f1f5f9;
+    }
+
+    .modal-body {
+      padding: 24px;
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      background: #fafcfa;
+    }
+
+    /* Modal Top Actions */
+    .modal-actions-bar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .btn-outline-green {
+      border: 1px solid #0d9488;
+      color: #0d9488;
+      background: white;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-dark {
+      background: #0f172a;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Modal Stat Summary Box (Image 5 style) */
+    .modal-stat-box {
+      border: 1px solid #0f172a;
+      border-radius: 4px;
+      display: flex;
+      background: white;
+      overflow: hidden;
+      width: 320px;
+    }
+
+    .stat-col {
+      flex: 1;
+      padding: 10px 14px;
+      border-right: 1px solid #e2e8f0;
+    }
+
+    .stat-col:last-child {
+      border-right: none;
+    }
+
+    .stat-col.alert-stat {
+      background: #fef2f2;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+    }
+
+    .stat-val {
+      font-size: 20px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 2px;
+    }
+
+    .stat-val.red {
+      color: #dc2626;
+    }
+
+    .stat-val.green {
+      color: #16a34a;
+    }
+
+    /* Lead Item Card (Image 4 & Image 5 style) */
+    .lead-card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+
+    .lead-card.gap-card {
+      border: 1px solid #dc2626;
+    }
+
+    .lead-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .badge-delayed {
+      background: #fef9c3;
+      color: #854d0e;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+
+    .badge-lost-tag {
+      background: #fee2e2;
+      color: #991b1b;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+
+    .lead-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 4px;
+    }
+
+    .lead-id-sub {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px 16px;
+      background: #f8fafc;
+      padding: 12px 16px;
+      border-radius: 8px;
+    }
+
+    .info-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .info-lbl {
+      font-size: 10px;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+    }
+
+    .info-val {
+      font-size: 12px;
+      font-weight: 600;
+      color: #1e293b;
+      margin-top: 2px;
+    }
+
+    .audit-finding-box {
+      font-size: 12px;
+      color: #475569;
+    }
+
+    .audit-finding-lbl {
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      margin-bottom: 2px;
+    }
+
+    .action-links {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .action-links a {
+      color: #0d9488;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Red Alert Reason Box (Image 5 style) */
+    .gap-reason-box {
+      background: #fee2e2;
+      border: 1px solid #fecaca;
+      padding: 12px 16px;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .gap-reason-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #991b1b;
+      text-transform: uppercase;
+    }
+
+    .gap-reason-text {
+      font-size: 15px;
+      font-weight: 700;
+      color: #7f1d1d;
+      margin-top: 2px;
+    }
+
+    .btn-high-alert {
+      background: #991b1b;
+      color: white;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 6px 12px;
+      border-radius: 4px;
+      border: none;
+
+      letter-spacing: 0.5px;
+    }
+
+    /* Reconciliation Context Table (Image 5 style) */
+    .recon-context-box {
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .recon-header {
+      background: #f8fafc;
+      padding: 8px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #b91c1c;
+      text-transform: uppercase;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .recon-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      background: white;
+    }
+
+    .recon-cell {
+      padding: 10px 12px;
+      border-right: 1px solid #f1f5f9;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .recon-cell:nth-child(4n) {
+      border-right: none;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: flex-end;
+      background: white;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar Component -->
+  <aside>
+    <div class="brand-header">
+      <div class="brand-logo">LG</div>
+      <div>
+        <div class="brand-title">LeadGuard</div>
+        <div class="brand-subtitle">ID reconciliation</div>
+      </div>
+    </div>
+    <ul class="nav-list">
+      <li class="nav-item active">
+        <a href="#"><i data-lucide="layout-dashboard"></i> Command center</a>
+      </li>
+      <li class="nav-item">
+        <a href="#"><i data-lucide="radar"></i> Lost radar <span class="nav-badge">9</span></a>
+      </li>
+      <li class="nav-item">
+        <a href="#"><i data-lucide="git-compare"></i> Reconciliation</a>
+      </li>
+      <li class="nav-item">
+        <a href="#"><i data-lucide="alert-triangle"></i> Incidents <span class="nav-badge" style="background:#64748b">23</span></a>
+      </li>
+      <li class="nav-item">
+        <a href="#"><i data-lucide="copy"></i> Duplicate proof</a>
+      </li>
+    </ul>
+    <div class="sidebar-footer">
+      <div style="display:flex; align-items:center; gap:6px; color:#10b981; margin-bottom:4px; font-weight:600;">
+        <span class="live-dot"></span> Monitoring active
+      </div>
+      <div>2,932 unique Lead IDs</div>
+      <div style="color:#475569; margin-top:12px;">Operations Admin</div>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main>
+    <!-- Top Header -->
+    <div class="top-bar">
+      <div>
+        <div class="breadcrumb">OPERATIONS / LEAD CONTROL</div>
+        <h1 class="page-title">CRM reconciliation command center</h1>
+      </div>
+      <div class="top-actions">
+        <div class="live-status">
+          <span class="live-dot"></span> LIVE DATA
+        </div>
+        <button class="btn-refresh" onclick="location.reload()">
+          <i data-lucide="refresh-cw" style="width:14px; height:14px;"></i> Refresh now
+        </button>
+      </div>
+    </div>
+
+    <div class="content-area">
+      <!-- Upper Section UI: Banner Alert (Image 2) -->
+      <div class="banner-alert">
+        <div class="banner-left">
+          <div class="alert-icon-circle">
+            <i data-lucide="alert-circle" style="width:20px; height:20px;"></i>
+          </div>
+          <div>
+            <div class="banner-title">9 lead reconciliation exceptions</div>
+            <div class="banner-desc">Lost radar exact pipeline stage aur records identify karta hai.</div>
+          </div>
+        </div>
+        <div class="banner-link" onclick="openGapModal('Medium-Buffer', 'Facebook')">
+          Review leads <i data-lucide="arrow-right" style="width:16px; height:16px;"></i>
+        </div>
+      </div>
+
+      <!-- Upper Section UI: Filters (Image 2) -->
+      <div class="filter-bar">
+        <div class="search-input-wrapper">
+          <i data-lucide="search"></i>
+          <input type="text" id="searchInput" class="search-input" placeholder="Search company, source or date..." oninput="handleSearch()">
+        </div>
+        <select class="filter-select" id="companySelect">
+          <option value="VillaRaag">VillaRaag</option>
+          <option value="All">All Companies</option>
+        </select>
+        <select class="filter-select" id="sourceSelect">
+          <option value="All">All sources</option>
+          <option value="Facebook">Facebook</option>
+          <option value="Google">Google</option>
+          <option value="Anjali AI-web">Anjali AI-web</option>
+          <option value="IVR">IVR</option>
+        </select>
+        <select class="filter-select" style="border-color:#0f172a; font-weight:600;">
+          <option>07 Aug 2026</option>
+        </select>
+        <select class="filter-select">
+          <option>All status</option>
+        </select>
+        <span class="filter-clear" onclick="resetFilters()">Clear</span>
+      </div>
+
+      <!-- Upper Section UI: 5 KPI Summary Cards (Image 2) -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <div class="kpi-icon" style="background:#e6f4f1; color:#0d9488;">
+              <i data-lucide="arrow-down-left" style="width:18px;"></i>
+            </div>
+            <div class="kpi-title">DIRECT API LEADS</div>
+          </div>
+          <div class="kpi-value" id="kpi-direct">25</div>
+          <div class="kpi-sub">Unique Lead IDs</div>
+        </div>
+
+        <div class="kpi-card alert-card">
+          <div class="kpi-top">
+            <div class="kpi-icon" style="background:#fee2e2; color:#dc2626;">
+              <i data-lucide="alert-circle" style="width:18px;"></i>
+            </div>
+            <div class="kpi-title">OPEN RECONCILIATION GAPS</div>
+          </div>
+          <div class="kpi-value" style="color:#dc2626;" id="kpi-gaps">9</div>
+          <div class="kpi-sub">Needs audit now</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <div class="kpi-icon" style="background:#fef9c3; color:#ca8a04;">
+              <i data-lucide="command" style="width:18px;"></i>
+            </div>
+            <div class="kpi-title">VALID DUPLICATES</div>
+          </div>
+          <div class="kpi-value">1</div>
+          <div class="kpi-sub">ID / mobile / email proof</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <div class="kpi-icon" style="background:#f3e8ff; color:#9333ea;">
+              <i data-lucide="clock" style="width:18px;"></i>
+            </div>
+            <div class="kpi-title">TAT / SLA BREACH</div>
+          </div>
+          <div class="kpi-value">13</div>
+          <div class="kpi-sub">Average 388 min</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <div class="kpi-icon" style="background:#dcfce7; color:#16a34a;">
+              <i data-lucide="check" style="width:18px;"></i>
+            </div>
+            <div class="kpi-title">SALES / KSERVE</div>
+          </div>
+          <div class="kpi-value" id="kpi-kserve">15</div>
+          <div class="kpi-sub">60% of intake</div>
+        </div>
+      </div>
+
+      <!-- Lower Section UI: Daily Reconciliation Table (Image 1 & 3) -->
+      <div class="table-container">
+        <div class="table-header-title">
+          <div>
+            <div class="sub-breadcrumb">DAILY RECONCILIATION</div>
+            <div class="main-table-title">Ascending date · company × source · daily total</div>
+          </div>
+          <div class="table-controls">
+            <span>6 rows</span>
+            <select class="filter-select" style="padding: 6px 12px;">
+              <option>Highest loss</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>DATE / COMPANY</th>
+                <th>VERIFIED SOURCE</th>
+                <th>DIRECT API SHEET COUNT</th>
+                <th>MASTER MEDIUM SHEET</th>
+                <th>GAP/LOST<br><span style="font-weight:400; font-size:10px;">DIRECT API-MEDIUM</span></th>
+                <th>TRANSFER TO BUFFER SHEET</th>
+                <th>GAP/LOST<br><span style="font-weight:400; font-size:10px;">MEDIUM-BUFFER</span></th>
+                <th>ACTUAL CRM COUNT</th>
+                <th>GAP/LOST<br><span style="font-weight:400; font-size:10px;">BUFFER-CRM</span></th>
+                <th>ACTUAL TRANSFER<br>TO SALES PERSON</th>
+                <th>ACTUAL TRANSFER<br>TO KSERVE</th>
+                <th>TAT</th>
+                <th>STATUS</th>
+              </tr>
+            </thead>
+            <tbody id="table-body">
+              <!-- Rendered dynamically from Excel JSON data -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-footer-legend">
+          <div class="legend-items">
+            <div class="legend-item">
+              <span class="legend-dot" style="background:#ef4444;"></span>
+              <span>DIRECT API = MASTER MEDIUM + DIRECT API-MEDIUM GAP</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot" style="background:#f59e0b;"></span>
+              <span>MASTER MEDIUM = TO BUFFER + MEDIUM-BUFFER GAP/LOST</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot" style="background:#10b981;"></span>
+              <span>TO BUFFER = ACTUAL CRM + BUFFER-CRM GAP</span>
+            </div>
+          </div>
+          <div>Last sync · 8/8/2026, 6:57:33 pm</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal 1: Lead Details Popup (Image 4 Design) -->
+  <div class="modal-backdrop" id="sheetCountModal">
+    <div class="modal-drawer">
+      <div class="modal-header">
+        <div>
+          <div class="modal-subtitle">LEAD DRILL-DOWN</div>
+          <div class="modal-title" id="modalSheetTitle">VillaRaag · Anjali AI-web · Direct API Sheet Count</div>
+          <div style="font-size:12px; color:#64748b; margin-top:4px;" id="modalSheetSub">2 matching Lead IDs</div>
+        </div>
+        <button class="btn-close" onclick="closeModals()"><i data-lucide="x"></i></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-actions-bar">
+          <button class="btn-outline-green"><i data-lucide="external-link" style="width:14px;"></i> Open correct data sheet</button>
+          <div class="search-input-wrapper" style="flex:1;">
+            <i data-lucide="search"></i>
+            <input type="text" class="search-input" placeholder="Search Lead ID, company, source, status...">
+          </div>
+          <button class="btn-dark">Export CSV</button>
+        </div>
+
+        <!-- Dynamic Lead Detail Cards Container -->
+        <div id="sheetLeadsList" style="display:flex; flex-direction:column; gap:16px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Gap / Lost Audit Popup (Image 5 Design) -->
+  <div class="modal-backdrop" id="gapAuditModal">
+    <div class="modal-drawer" style="max-width:800px;">
+      <div class="modal-header">
+        <div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <h2 style="font-size:24px; font-weight:800; color:#0f172a;">Gap / Lost Audit</h2>
+            <span style="background:#fee2e2; color:#b91c1c; font-size:11px; font-weight:700; padding:3px 8px; border-radius:4px; border:1px solid #fecaca;">Lead ID Reconciliation</span>
+          </div>
+          <div style="font-size:12px; color:#64748b; margin-top:4px;" id="gapModalSubtitle">VillaRaag · Facebook · Gap/Lost Direct API-Medium</div>
+        </div>
+        <button class="btn-close" onclick="closeModals()"><i data-lucide="x"></i></button>
+      </div>
+
+      <div class="modal-body">
+        <div style="font-size:13px; color:#475569; line-height:1.5;">
+          Every missing Lead ID below is checked independently against earlier forwarded leads by Mobile Number and/or Email ID within 24 hours. A matched original is a Valid Duplicate; when no original matches, the reconciliation context stays blank and the lead is Actual Lost.
+        </div>
+
+        <!-- 3 Stat Boxes (Image 5 design) -->
+        <div class="modal-stat-box">
+          <div class="stat-col">
+            <div class="stat-label">TOTAL GAP</div>
+            <div class="stat-val" id="gapTotalVal">1</div>
+          </div>
+          <div class="stat-col" style="background:#f0fdf4;">
+            <div class="stat-label">VALID DUPLICATE</div>
+            <div class="stat-val green">0</div>
+          </div>
+          <div class="stat-col alert-stat">
+            <div class="stat-label">ACTUAL LOST</div>
+            <div class="stat-val red" id="gapLostVal">1</div>
+          </div>
+        </div>
+
+        <hr style="border:none; border-top:1px solid #e2e8f0; margin:4px 0;">
+
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-size:11px; font-weight:800; color:#b91c1c; letter-spacing:0.5px; text-transform:uppercase;">ALL RECORDS MISSING FROM THIS STAGE (1)</div>
+            <div style="font-size:12px; color:#64748b; margin-top:2px;">Every lead has its own Enquiry ID, mobile and email reconciliation context directly below it.</div>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <button class="btn-outline-green" style="padding:6px 12px; font-size:12px;">Open data sheet <i data-lucide="external-link" style="width:12px;"></i></button>
+            <button class="btn-dark" style="padding:6px 12px; font-size:12px;">Export CSV</button>
+          </div>
+        </div>
+
+        <div class="search-input-wrapper">
+          <i data-lucide="search"></i>
+          <input type="text" class="search-input" placeholder="Search Lead ID, name, source or status...">
+        </div>
+
+        <!-- Dynamic Gap Card Container -->
+        <div id="gapLeadsList" style="display:flex; flex-direction:column; gap:16px;"></div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-dark" onclick="closeModals()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Embedded parsed Excel Data from 07 Aug 2026
+    const appData = {
+      summary: [
+        {
+          date: "07 Aug 2026",
+          company: "VillaRaag",
+          source: "Facebook",
+          srcCode: "F",
+          srcColor: "#2563eb",
+          srcBg: "#eff6ff",
+          direct_api: 13,
+          master_medium: 13,
+          gap_direct_medium: 0,
+          transfer_buffer: 12,
+          gap_medium_buffer: 1,
+          actual_crm: 12,
+          gap_buffer_crm: 0,
+          transfer_sales: 4,
+          transfer_kserve: 8,
+          tat: "7:21:59",
+          tat_sub: "SLA breach",
+          status: "Medium-Buffer Gap",
+          statusClass: "lost"
+        },
+        {
+          date: "07 Aug 2026",
+          company: "VillaRaag",
+          source: "Google",
+          srcCode: "G",
+          srcColor: "#ea580c",
+          srcBg: "#ffedd5",
+          direct_api: 8,
+          master_medium: 8,
+          gap_direct_medium: 0,
+          transfer_buffer: 8,
+          gap_medium_buffer: 0,
+          actual_crm: 8,
+          gap_buffer_crm: 0,
+          transfer_sales: 0,
+          transfer_kserve: 8,
+          tat: "2:28:12",
+          tat_sub: "SLA breach",
+          status: "TAT breach",
+          statusClass: "breach"
+        },
+        {
+          date: "07 Aug 2026",
+          company: "VillaRaag",
+          source: "Anjali AI Web",
+          srcCode: "A",
+          srcColor: "#0d9488",
+          srcBg: "#e6f4f1",
+          direct_api: 2,
+          master_medium: 2,
+          gap_direct_medium: 0,
+          transfer_buffer: 2,
+          gap_medium_buffer: 0,
+          actual_crm: 2,
+          gap_buffer_crm: 0,
+          transfer_sales: 2,
+          transfer_kserve: 0,
+          tat: "1:31:19",
+          tat_sub: "SLA breach",
+          status: "TAT breach",
+          statusClass: "breach"
+        },
+        {
+          date: "07 Aug 2026",
+          company: "VillaRaag",
+          source: "IVR",
+          srcCode: "I",
+          srcColor: "#059669",
+          srcBg: "#ecfdf5",
+          direct_api: 3,
+          master_medium: 3,
+          gap_direct_medium: 0,
+          transfer_buffer: 2,
+          gap_medium_buffer: 1,
+          actual_crm: 2,
+          gap_buffer_crm: 0,
+          transfer_sales: 1,
+          transfer_kserve: 1,
+          tat: "1:53:25",
+          tat_sub: "Within SLA",
+          status: "Medium-Buffer Gap",
+          statusClass: "lost"
+        },
+        {
+          date: "07 Aug 2026",
+          company: "VillaRaag",
+          source: "website",
+          srcCode: "W",
+          srcColor: "#7c3aed",
+          srcBg: "#f3e8ff",
+          direct_api: 0,
+          master_medium: 0,
+          gap_direct_medium: 0,
+          transfer_buffer: 0,
+          gap_medium_buffer: 0,
+          actual_crm: 0,
+          gap_buffer_crm: 0,
+          transfer_sales: 0,
+          transfer_kserve: 0,
+          tat: "0:00:00",
+          tat_sub: "Within SLA",
+          status: "Reconciled",
+          statusClass: "reconciled"
+        },
+        {
+          date: "07 Aug 2026",
+          company: "VillaRaag",
+          source: "others",
+          srcCode: "O",
+          srcColor: "#0284c7",
+          srcBg: "#e0f2fe",
+          direct_api: 0,
+          master_medium: 0,
+          gap_direct_medium: 0,
+          transfer_buffer: 0,
+          gap_medium_buffer: 0,
+          actual_crm: 0,
+          gap_buffer_crm: 0,
+          transfer_sales: 0,
+          transfer_kserve: 0,
+          tat: "0:00:00",
+          tat_sub: "Within SLA",
+          status: "Reconciled",
+          statusClass: "reconciled"
+        }
+      ],
+      leads: [
+        // --- FACEBOOK DIRECT SHEET (13 RECORDS FROM IMAGE) ---
+        {
+          id: "1684180529348713",
+          name: "-",
+          company: "VillaRaag",
+          source: "Facebook",
+          date: "2026-08-07 03:53:24",
+          chatbase_source: "Faacebook",
+          status_badge: "Direct Sheet",
+          current_status: "-",
+          buffer_status: "-",
+          crm_status: "-",
+          transfer_status: "Transfer at Villa_Raag_FacebookAPI_Medium07-Aug-26",
+          tat: "-",
+          audit_finding: "Record present in Direct Sheet Villaraag Facebook",
+          is_gap: false
+        },
+        {
+          id: "1032882906134306",
+          name: "-",
+          company: "VillaRaag",
+          source: "Facebook",
+          date: "2026-08-07 03:54:51",
+          chatbase_source: "Faacebook",
+          status_badge: "Direct Sheet",
+          current_status: "-",
+          buffer_status: "-",
+          crm_status: "-",
+          transfer_status: "Transfer at Villa_Raag_FacebookAPI_Medium07-Aug-26",
+          tat: "-",
+          audit_finding: "Record present in Direct Sheet Villaraag Facebook",
+          is_gap: false
+        },
+        {
+          id: "1122982300375193",
+          name: "-",
+          company: "VillaRaag",
+          source: "Facebook",
+          date: "2026-08-07 04:03:48",
+          chatbase_source: "Faacebook",
+          status_badge: "Direct Sheet",
+          current_status: "-",
+          buffer_status: "-",
+          crm_status: "-",
+          transfer_status: "Transfer at Villa_Raag_FacebookAPI_Medium07-Aug-26",
+          tat: "-",
+          audit_finding: "Record present in Direct Sheet Villaraag Facebook",
+          is_gap: false
+        },
+        {
+          id: "1023815157190071",
+          name: "-",
+          company: "VillaRaag",
+          source: "Facebook",
+          date: "2026-08-07 05:11:43",
+          chatbase_source: "Faacebook",
+          status_badge: "Direct Sheet",
+          current_status: "-",
+          buffer_status: "-",
+          crm_status: "-",
+          transfer_status: "Transfer at Villa_Raag_FacebookAPI_Medium07-Aug-26",
+          tat: "-",
+          audit_finding: "Record present in Direct Sheet Villaraag Facebook",
+          is_gap: false
+        },
+        {
+          id: "1038164128997676",
+          name: "-",
+          company: "VillaRaag",
+          source: "Facebook",
+          date: "2026-08-07 05:16:10",
+          chatbase_source: "Faacebook",
+          status_badge: "Direct Sheet",
+          current_status: "-",
+          buffer_status: "-",
+          crm_status: "-",
+          transfer_status: "Transfer at Villa_Raag_FacebookAPI_Medium07-Aug-26",
+          tat: "-",
+          audit_finding: "Record present in Direct Sheet Villaraag Facebook",
+          is_gap: false
+        },
+        {
+          id: "4177698252362001",
+          name: "-",
+          company: "VillaRaag",
+          source: "Facebook",
+          date: "2026-08-07 06:00:49",
+          chatbase_source: "Faacebook",
+          status_badge: "Direct Sheet",
+          current_status: "-",
+          buffer_status: "-",
+          crm_status: "-",
+          transfer_status: "Transfer at Villa_Raag_FacebookAPI_Medium07-Aug-26",
+          tat: "-",
+          audit_finding: "Record present in Direct Sheet Villaraag Facebook",
+          is_gap: false
+        },
+        {
+          id: "3155284144666757",
+          name: "-",
+          company: "VillaRaag",
+          source: "Facebook",
+          date: "2026-08-07 07:05:06",
+          chatbase_source: "Faacebook",
+          status_badge: "Direct Sheet",
+          current_status: "-",
+          buffer_status: "-",
+          crm_status: "-",
+          transfer_status: "Transfer at Villa_Raag_FacebookAPI_Medium07-Aug-26",
+          tat: "-",
+          audit_finding: "Record present in Direct Sheet Villaraag Facebook",
+          is_gap: false
+        },
+        {
+          id: "1568326035015445",
+          name: "-",
+          company: "VillaRaag",
+          source: "Facebook",
+          date: "2026-08-07 07:26:49",
+          chatbase_source: "Faacebook",
+          status_badge: "Direct Sheet",
+          current_status: "-",
+          buffer_status: "-",
+          crm_status: "-",
+          transfer_status: "Transfer at Villa_Raag_FacebookAPI_Medium07-Aug-26",
+          tat: "-",
+          audit_finding: "Record present in Direct Sheet Villaraag Facebook",
+          is_gap: false
+        },
+        {
+          id: "847261855007085",
+          name: "-",
+          company: "VillaRaag",
+          source: "Facebook",
+          date: "2026-08-07 08:59:48",
+          chatbase_source: "Faacebook",
+          status_badge: "Direct Sheet",
+          current_status: "-",
+          buffer_status: "-",
+          crm_status: "-",
+          transfer_status: "Transfer at Villa_Raag_FacebookAPI_Medium07-Aug-26",
+          tat: "-",
+          audit_finding: "Record present in Direct Sheet Villaraag Facebook",
+          is_gap: true,
+          gap_type: "Medium-Buffer",
+          gap_reason: "No Duplicate — It's Lost",
+          gap_subtext: "No earlier forwarded lead matched by Enquiry ID, Mobile Number or Email ID within 24 hours.",
+          mobile_mask: "**** 3747",
+          enquiry_time: "07 Aug 2026 - 08:59"
+        },
+        {
+          id: "1189215923411311",
+          name: "-",
+          company: "VillaRaag",
+          source: "Facebook",
+          date: "2026-08-07 13:09:17",
+          chatbase_source: "Faacebook",
+          status_badge: "Direct Sheet",
+          current_status: "-",
+          buffer_status: "-",
+          crm_status: "-",
+          transfer_status: "Transfer at Villa_Raag_FacebookAPI_Medium07-Aug-26",
+          tat: "-",
+          audit_finding: "Record present in Direct Sheet Villaraag Facebook",
+          is_gap: false
+        },
+        {
+          id: "1561908902003871",
+          name: "-",
+          company: "VillaRaag",
+          source: "Facebook",
+          date: "2026-08-07 14:49:30",
+          chatbase_source: "Faacebook",
+          status_badge: "Direct Sheet",
+          current_status: "-",
+          buffer_status: "-",
+          crm_status: "-",
+          transfer_status: "Transfer at Villa_Raag_FacebookAPI_Medium07-Aug-26",
+          tat: "-",
+          audit_finding: "Record present in Direct Sheet Villaraag Facebook",
+          is_gap: false
+        },
+        {
+          id: "1655088796227259",
+          name: "-",
+          company: "VillaRaag",
+          source: "Facebook",
+          date: "2026-08-07 16:12:45",
+          chatbase_source: "Faacebook",
+          status_badge: "Direct Sheet",
+          current_status: "-",
+          buffer_status: "-",
+          crm_status: "-",
+          transfer_status: "Transfer at Villa_Raag_FacebookAPI_Medium07-Aug-26",
+          tat: "-",
+          audit_finding: "Record present in Direct Sheet Villaraag Facebook",
+          is_gap: false
+        },
+        {
+          id: "4350713851858965",
+          name: "-",
+          company: "VillaRaag",
+          source: "Facebook",
+          date: "2026-08-07 17:37:33",
+          chatbase_source: "Faacebook",
+          status_badge: "Direct Sheet",
+          current_status: "-",
+          buffer_status: "-",
+          crm_status: "-",
+          transfer_status: "Transfer at Villa_Raag_FacebookAPI_Medium07-Aug-26",
+          tat: "-",
+          audit_finding: "Record present in Direct Sheet Villaraag Facebook",
+          is_gap: false
+        },
+
+        // --- GOOGLE DIRECT SHEET (8 RECORDS FROM IMAGE) ---
+        {
+          id: "VR_1786060995071-1043",
+          name: "-",
+          company: "VillaRaag",
+          source: "Google",
+          date: "7/8/2026, 5:30:19 AM",
+          chatbase_source: "Google",
+          status_badge: "Direct Sheet",
+          current_status: "-",
+          buffer_status: "-",
+          crm_status: "-",
+          transfer_status: "Transfer at Villa_Raag_Medium07-Aug-26",
+          tat: "-",
+          audit_finding: "Record present in Direct Sheet Villaraag Google",
+          is_gap: false
+        },
+        {
+          id: "VR_1786082048209-1044",
+          name: "-",
+          company: "VillaRaag",
+          source: "Google",
+          date: "7/8/2026, 11:22:55 AM",
+          chatbase_source: "Google",
+          status_badge: "Direct Sheet",
+          current_status: "-",
+          buffer_status: "-",
+          crm_status: "-",
+          transfer_status: "Transfer at Villa_Raag_Medium07-Aug-26",
+          tat: "-",
+          audit_finding: "Record present in Direct Sheet Villaraag Google",
+          is_gap: false
+        },
+        {
+          id: "VR_1786087347703-1045",
+          name: "-",
+          company: "VillaRaag",
+          source: "Google",
+          date: "7/8/2026, 12:51:08 PM",
+          chatbase_source: "Google",
+          status_badge: "Direct Sheet",
+          current_status: "-",
+          buffer_status: "-",
+          crm_status: "-",
+          transfer_status: "Transfer at Villa_Raag_Medium07-Aug-26",
+          tat: "-",
+          audit_finding: "Record present in Direct Sheet Villaraag Google",
+          is_gap: false
+        },
+        {
+          id: "VR_1786087996931-1046",
+          name: "-",
+          company: "VillaRaag",
+          source: "Google",
+          date: "7/8/2026, 1:02:11 PM",
+          chatbase_source: "Google",
+          status_badge: "Direct Sheet",
+          current_status: "-",
+          buffer_status: "-",
+          crm_status: "-",
+          transfer_status: "Transfer at Villa_Raag_Medium07-Aug-26",
+          tat: "-",
+          audit_finding: "Record present in Direct Sheet Villaraag Google",
+          is_gap: false
+        },
+        {
+          id: "VR_1786088391198-1047",
+          name: "-",
+          company: "VillaRaag",
+          source: "Google",
+          date: "7/8/2026, 1:08:35 PM",
+          chatbase_source: "Google",
+          status_badge: "Direct Sheet",
+          current_status: "-",
+          buffer_status: "-",
+          crm_status: "-",
+          transfer_status: "Transfer at Villa_Raag_Medium07-Aug-26",
+          tat: "-",
+          audit_finding: "Record present in Direct Sheet Villaraag Google",
+          is_gap: false
+        },
+        {
+          id: "VR_1786103052146-1048",
+          name: "-",
+          company: "VillaRaag",
+          source: "Google",
+          date: "7/8/2026, 5:13:26 PM",
+          chatbase_source: "Google",
+          status_badge: "Direct Sheet",
+          current_status: "-",
+          buffer_status: "-",
+          crm_status: "-",
+          transfer_status: "Transfer at Villa_Raag_Medium07-Aug-26",
+          tat: "-",
+          audit_finding: "Record present in Direct Sheet Villaraag Google",
+          is_gap: false
+        },
+        {
+          id: "VR_1786114989903-1049",
+          name: "-",
+          company: "VillaRaag",
+          source: "Google",
+          date: "7/8/2026, 8:29:47 PM",
+          chatbase_source: "Google",
+          status_badge: "Direct Sheet",
+          current_status: "-",
+          buffer_status: "-",
+          crm_status: "-",
+          transfer_status: "Transfer at Villa_Raag_Medium07-Aug-26",
+          tat: "-",
+          audit_finding: "Record present in Direct Sheet Villaraag Google",
+          is_gap: false
+        },
+        {
+          id: "VR_1786123866190-1050",
+          name: "-",
+          company: "VillaRaag",
+          source: "Google",
+          date: "7/8/2026, 10:59:19 PM",
+          chatbase_source: "Google",
+          status_badge: "Direct Sheet",
+          current_status: "-",
+          buffer_status: "-",
+          crm_status: "-",
+          transfer_status: "Transfer at Villa_Raag_Medium07-Aug-26",
+          tat: "-",
+          audit_finding: "Record present in Direct Sheet Villaraag Google",
+          is_gap: false
+        },
+
+        // --- ANJALI AI WEB (2 RECORDS) ---
+        {
+          id: "89094d3f-4764-4948-a677-8efbc6e567ef",
+          name: "-",
+          company: "VillaRaag",
+          source: "Anjali AI Web",
+          date: "2026-08-07 08:24:46",
+          chatbase_source: "Anjali AI Web",
+          status_badge: "Direct Sheet",
+          current_status: "-",
+          buffer_status: "-",
+          crm_status: "-",
+          transfer_status: "Transfer to ChatBase Medium 07-Aug-26",
+          tat: "-",
+          audit_finding: "Record present in Direct Sheet Anjali AI Web",
+          is_gap: false
+        },
+        {
+          id: "e60e400b-6ebb-4ad8-93d6-c95d9640c8fc",
+          name: "-",
+          company: "VillaRaag",
+          source: "Anjali AI Web",
+          date: "2026-08-07 21:44:35",
+          chatbase_source: "Anjali AI Web",
+          status_badge: "Direct Sheet",
+          current_status: "-",
+          buffer_status: "-",
+          crm_status: "-",
+          transfer_status: "Transfer to ChatBase Medium 07-Aug-26",
+          tat: "-",
+          audit_finding: "Record present in Direct Sheet Anjali AI Web",
+          is_gap: false
+        },
+
+        // --- IVR (3 RECORDS) ---
+        {
+          id: "917ed547-73ec-4e31-8288-4cd2f084482c",
+          name: "-",
+          company: "VillaRaag",
+          source: "IVR",
+          date: "2026-08-07 10:33:33",
+          chatbase_source: "IVR",
+          status_badge: "Direct Sheet",
+          current_status: "-",
+          buffer_status: "-",
+          crm_status: "-",
+          transfer_status: "Transfer to IVR Medium 07-Aug-26",
+          tat: "-",
+          audit_finding: "Record present in Direct Sheet IVR",
+          is_gap: false
+        },
+        {
+          id: "3656f5ac-a3b3-4350-953f-fc835210c2f2",
+          name: "-",
+          company: "VillaRaag",
+          source: "IVR",
+          date: "2026-08-07 10:56:07",
+          chatbase_source: "IVR",
+          status_badge: "Direct Sheet",
+          current_status: "-",
+          buffer_status: "-",
+          crm_status: "-",
+          transfer_status: "Transfer to IVR Medium 07-Aug-26",
+          tat: "-",
+          audit_finding: "Record present in Direct Sheet IVR",
+          is_gap: false
+        },
+        {
+          id: "b1fd6952-761e-45f3-af0a-4781754f63ab",
+          name: "-",
+          company: "VillaRaag",
+          source: "IVR",
+          date: "2026-08-07 14:58:30",
+          chatbase_source: "IVR",
+          status_badge: "Direct Sheet",
+          current_status: "-",
+          buffer_status: "-",
+          crm_status: "-",
+          transfer_status: "Transfer to IVR Medium 07-Aug-26",
+          tat: "-",
+          audit_finding: "Transferred to Deleted Sheet",
+          is_gap: true,
+          gap_type: "Buffer-CRM",
+          gap_reason: "Deleted from Buffer",
+          gap_subtext: "Record was transferred to deleted sheet in master medium stage.",
+          mobile_mask: "**** 9812",
+          enquiry_time: "07 Aug 2026 - 14:58"
+        }
+      ]
+    };
+
+    // Render Table
+    function renderTable(dataRows) {
+      const tbody = document.getElementById('table-body');
+      tbody.innerHTML = '';
+
+      let tot_direct = 0, tot_master = 0, tot_gap_dm = 0, tot_buf = 0, tot_gap_mb = 0, tot_crm = 0, tot_gap_bc = 0, tot_sales = 0, tot_kserve = 0;
+
+      dataRows.forEach(row => {
+        tot_direct += row.direct_api;
+        tot_master += row.master_medium;
+        tot_gap_dm += row.gap_direct_medium;
+        tot_buf += row.transfer_buffer;
+        tot_gap_mb += row.gap_medium_buffer;
+        tot_crm += row.actual_crm;
+        tot_gap_bc += row.gap_buffer_crm;
+        tot_sales += row.transfer_sales;
+        tot_kserve += row.transfer_kserve;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>
+            <div style="font-weight:700;">${row.date}</div>
+            <div style="font-size:11px; color:#94a3b8;">${row.company}</div>
+          </td>
+          <td>
+            <div class="source-cell">
+              <span class="source-icon" style="background:${row.srcBg}; color:${row.srcColor};">${row.srcCode}</span>
+              <span>${row.source}</span>
+            </div>
+          </td>
+          <td>
+            <span class="clickable-count" onclick="openSheetModal('${row.source}', 'Direct API Sheet Count', ${row.direct_api})">${row.direct_api}</span>
+          </td>
+          <td>
+            <span class="clickable-count" onclick="openSheetModal('${row.source}', 'Master Medium Sheet', ${row.master_medium})">${row.master_medium}</span>
+          </td>
+          <td>
+            ${row.gap_direct_medium > 0 
+              ? `<span class="clickable-count gap-badge" onclick="openGapModal('Direct API-Medium', '${row.source}')">${row.gap_direct_medium}</span>` 
+              : `<span>0</span>`}
+          </td>
+          <td>
+            <span class="clickable-count" onclick="openSheetModal('${row.source}', 'Transfer to Buffer Sheet', ${row.transfer_buffer})">${row.transfer_buffer}</span>
+          </td>
+          <td>
+            ${row.gap_medium_buffer > 0 
+              ? `<span class="clickable-count gap-badge" onclick="openGapModal('Medium-Buffer', '${row.source}')">${row.gap_medium_buffer}</span>` 
+              : `<span>0</span>`}
+          </td>
+          <td>
+            <span class="clickable-count" onclick="openSheetModal('${row.source}', 'Actual CRM Count', ${row.actual_crm})">${row.actual_crm}</span>
+          </td>
+          <td>
+            ${row.gap_buffer_crm > 0 
+              ? `<span class="clickable-count gap-badge" onclick="openGapModal('Buffer-CRM', '${row.source}')">${row.gap_buffer_crm}</span>` 
+              : `<span>0</span>`}
+          </td>
+          <td>${row.transfer_sales}</td>
+          <td>${row.transfer_kserve}</td>
+          <td>
+            <div style="font-weight:700; color:${row.tat_sub.includes('breach') ? '#b91c1c' : '#0f172a'};">${row.tat}</div>
+            <div style="font-size:11px; color:#64748b;">${row.tat_sub}</div>
+          </td>
+          <td>
+            <span class="status-pill ${row.statusClass}">
+              <span style="width:6px; height:6px; border-radius:50%; background:currentColor;"></span>
+              ${row.status}
+            </span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Total Row
+      const totalTr = document.createElement('tr');
+      totalTr.className = 'total-row';
+      totalTr.innerHTML = `
+        <td>
+          <div style="color:#0d9488;">07 Aug 2026</div>
+          <div style="font-size:10px; color:#64748b; text-transform:uppercase;">DAILY TOTAL</div>
+        </td>
+        <td>${dataRows.length} source rows</td>
+        <td>${tot_direct}</td>
+        <td>${tot_master}</td>
+        <td>
+          ${tot_gap_dm > 0 ? `<span class="clickable-count gap-badge" onclick="openGapModal('Direct API-Medium', 'All')">${tot_gap_dm}</span>` : '0'}
+        </td>
+        <td>${tot_buf}</td>
+        <td>
+          ${tot_gap_mb > 0 ? `<span class="clickable-count gap-badge" onclick="openGapModal('Medium-Buffer', 'All')">${tot_gap_mb}</span>` : '0'}
+        </td>
+        <td>${tot_crm}</td>
+        <td>
+          ${tot_gap_bc > 0 ? `<span class="clickable-count gap-badge" onclick="openGapModal('Buffer-CRM', 'All')">${tot_gap_bc}</span>` : '0'}
+        </td>
+        <td>${tot_sales}</td>
+        <td>${tot_kserve}</td>
+        <td>
+          <div style="font-weight:700;">11:04:55</div>
+          <div style="font-size:11px; color:#64748b;">15 breaches</div>
+        </td>
+        <td>
+          <span class="status-pill audit">
+            <span style="width:6px; height:6px; border-radius:50%; background:currentColor;"></span>
+            Audit
+          </span>
+        </td>
+      `;
+      tbody.appendChild(totalTr);
+
+      // Update KPI cards
+      document.getElementById('kpi-direct').innerText = tot_direct;
+      document.getElementById('kpi-gaps').innerText = tot_gap_dm + tot_gap_mb + tot_gap_bc;
+      document.getElementById('kpi-kserve').innerText = tot_kserve;
+    }
+
+    // Modal 1 Trigger (Image 4 Pop-up design)
+    function openSheetModal(source, colTitle, count) {
+      const modal = document.getElementById('sheetCountModal');
+      document.getElementById('modalSheetTitle').innerText = `VillaRaag · ${source} · ${colTitle}`;
+      document.getElementById('modalSheetSub').innerText = `${count} matching Lead IDs`;
+
+      const listContainer = document.getElementById('sheetLeadsList');
+      listContainer.innerHTML = '';
+
+      // Filter matching leads
+      let matchingLeads = appData.leads.filter(l => (l.source === source || source === 'All'));
+      
+      if (colTitle.includes('Buffer')) {
+        // Exclude gap/deleted leads from Transfer to Buffer view
+        matchingLeads = matchingLeads.filter(l => !l.is_gap);
+      }
+
+      if (count && matchingLeads.length > count) {
+        matchingLeads = matchingLeads.slice(0, count);
+      }
+
+      matchingLeads.forEach(lead => {
+        const card = document.createElement('div');
+        card.className = 'lead-card';
+        card.innerHTML = `
+          <div class="lead-card-header">
+            <div>
+              <span class="badge-delayed">• ${lead.status_badge || '-'}</span>
+              <div class="lead-name" style="font-family: monospace; font-size:16px;">${lead.id}</div>
+              <div class="lead-id-sub">Lead ID: ${lead.id}</div>
+            </div>
+            <div style="font-size:11px; color:#94a3b8; font-weight:600;">${lead.date || '-'}</div>
+          </div>
+
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-lbl">Date</span>
+              <span class="info-val">${lead.date || '-'}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-lbl">Company</span>
+              <span class="info-val">${lead.company || '-'}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-lbl">Source</span>
+              <span class="info-val">${lead.source || '-'}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-lbl">Chatbase Data Source</span>
+              <span class="info-val">${lead.chatbase_source || '-'}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-lbl">Current Status</span>
+              <span class="info-val">${lead.current_status || '-'}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-lbl">Buffer Status</span>
+              <span class="info-val">${lead.buffer_status || '-'}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-lbl">CRM Status</span>
+              <span class="info-val">${lead.crm_status || '-'}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-lbl">Transfer Status</span>
+              <span class="info-val">${lead.transfer_status || '-'}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-lbl">TAT</span>
+              <span class="info-val">${lead.tat || '-'}</span>
+            </div>
+          </div>
+
+          <div class="audit-finding-box">
+            <div class="audit-finding-lbl">Audit finding</div>
+            <div>${lead.audit_finding || '-'}</div>
+          </div>
+
+          <div class="action-links">
+            <a href="#">Open exact Direct row <i data-lucide="arrow-up-right" style="width:12px;"></i></a>
+            <a href="#">Open exact Buffer row <i data-lucide="arrow-up-right" style="width:12px;"></i></a>
+            <a href="#">Open CRM <i data-lucide="arrow-up-right" style="width:12px;"></i></a>
+          </div>
+        `;
+        listContainer.appendChild(card);
+      });
+
+      modal.classList.add('open');
+      lucide.createIcons();
+    }
+
+    // Modal 2 Trigger (Image 5 & IVR Duplicate Pop-up design)
+    function openGapModal(gapType, source) {
+      const modal = document.getElementById('gapAuditModal');
+      document.getElementById('gapModalSubtitle').innerText = `VillaRaag · ${source} · Gap/Lost ${gapType}`;
+
+      const listContainer = document.getElementById('gapLeadsList');
+      listContainer.innerHTML = '';
+
+      const isIvr = source === 'IVR';
+      const isFb = source === 'Facebook';
+      const isAll = source === 'All';
+
+      // Helper function to create IVR Duplicate Card HTML
+      const getIvrCardHtml = () => `
+        <div class="lead-card" style="border:1px solid #16a34a; background:#f0fdf4; margin-bottom:16px;">
+          <div style="border-left:4px solid #16a34a; padding-left:14px;">
+            <div class="lead-card-header">
+              <div>
+                <div style="font-size:10px; font-weight:800; color:#15803d; text-transform:uppercase;">MISSING LEAD</div>
+                <div style="font-size:18px; font-weight:800; color:#0f172a; margin-top:2px;">b1fd6952-761e-45f3-af0a-4781754f63ab</div>
+                <div style="font-size:12px; color:#475569;">IVR Source · IVR</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:12px; font-weight:600; color:#64748b;">••• 63ab — 07 Aug 2026 · 14:58:30</div>
+                <span style="background:#dcfce7; color:#15803d; font-size:11px; font-weight:800; padding:4px 10px; border-radius:4px; border:1px solid #bbf7d0; margin-top:6px; display:inline-block;">DUPLICATE</span>
+              </div>
+            </div>
+
+            <div style="background:#e6f4ea; border:1px solid #bbf7d0; padding:12px 16px; border-radius:6px; display:flex; justify-content:space-between; align-items:center; margin-top:14px;">
+              <div>
+                <div style="font-size:10px; font-weight:800; color:#15803d; text-transform:uppercase;">DUPLICATE STATUS REASON</div>
+                <div style="font-size:15px; font-weight:800; color:#14532d; margin-top:2px;">Duplicate — Lead Already Exists</div>
+                <div style="font-size:11px; color:#166534; margin-top:2px;">This lead was identified as a duplicate in medium sheet. A new matching lead with the same customer.</div>
+              </div>
+              <span style="background:#15803d; color:white; font-size:11px; font-weight:800; padding:6px 12px; border-radius:4px;">VALID DUPLICATE</span>
+            </div>
+
+            <div class="recon-context-box" style="margin-top:14px; background:white;">
+              <div class="recon-header" style="color:#15803d; background:#f0fdf4;">
+                <span>ORIGINAL LEAD — RECONCILIATION CONTEXT</span>
+                <span style="font-weight:400; text-transform:none; color:#64748b;">This is the original lead that matches the duplicate record above.</span>
+              </div>
+              <div class="recon-grid">
+                <div class="recon-cell">
+                  <div class="info-lbl">ORIGINAL LEAD ID</div>
+                  <div class="info-val" style="font-size:11px; word-break:break-all;">38d4ea46-6e50-43f1-ac8c-88ef9ad5db8a</div>
+                </div>
+                <div class="recon-cell">
+                  <div class="info-lbl">ORIGINAL NAME</div>
+                  <div class="info-val" style="color:#94a3b8;">—</div>
+                </div>
+                <div class="recon-cell">
+                  <div class="info-lbl">MOBILE NUMBER</div>
+                  <div class="info-val">+919952516561</div>
+                </div>
+                <div class="recon-cell">
+                  <div class="info-lbl">EMAIL ID</div>
+                  <div class="info-val" style="color:#94a3b8;">—</div>
+                </div>
+                <div class="recon-cell">
+                  <div class="info-lbl">ORIGINAL ENQUIRY TIME</div>
+                  <div class="info-val">07 Aug 2026 14:58:19</div>
+                </div>
+                <div class="recon-cell">
+                  <div class="info-lbl">ORIGINAL DATA SOURCE</div>
+                  <div class="info-val">IVR</div>
+                </div>
+                <div class="recon-cell">
+                  <div class="info-lbl">STATUS</div>
+                  <div class="info-val" style="color:#16a34a; font-weight:800;">Original / Valid</div>
+                </div>
+                <div class="recon-cell">
+                  <div class="info-lbl">MATCH BASIS</div>
+                  <div class="info-val">Mobile</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Helper function to create Facebook Duplicate Card HTML
+      const getFbCardHtml = () => `
+        <div class="lead-card" style="border:1px solid #16a34a; background:#f0fdf4; margin-bottom:16px;">
+          <div style="border-left:4px solid #16a34a; padding-left:14px;">
+            <div class="lead-card-header">
+              <div>
+                <div style="font-size:10px; font-weight:800; color:#15803d; text-transform:uppercase;">MISSING LEAD</div>
+                <div style="font-size:18px; font-weight:800; color:#0f172a; margin-top:2px;">1655088796227259</div>
+                <div style="font-size:12px; color:#475569;">Sandeip · Facebook</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:12px; font-weight:600; color:#64748b;">••• 7259 — 07 Aug 2026 · 16:12</div>
+                <span style="background:#dcfce7; color:#15803d; font-size:11px; font-weight:800; padding:4px 10px; border-radius:4px; border:1px solid #bbf7d0; margin-top:6px; display:inline-block;">DUPLICATE</span>
+              </div>
+            </div>
+
+            <div style="background:#e6f4ea; border:1px solid #bbf7d0; padding:12px 16px; border-radius:6px; display:flex; justify-content:space-between; align-items:center; margin-top:14px;">
+              <div>
+                <div style="font-size:10px; font-weight:800; color:#15803d; text-transform:uppercase;">DUPLICATE STATUS REASON</div>
+                <div style="font-size:15px; font-weight:800; color:#14532d; margin-top:2px;">Duplicate — Lead Already Exists</div>
+                <div style="font-size:11px; color:#166534; margin-top:2px;">This lead was identified as a duplicate in medium sheet . A new matching lead with the same customer.</div>
+              </div>
+              <span style="background:#15803d; color:white; font-size:11px; font-weight:800; padding:6px 12px; border-radius:4px;">VALID DUPLICATE</span>
+            </div>
+
+            <div class="recon-context-box" style="margin-top:14px; background:white;">
+              <div class="recon-header" style="color:#15803d; background:#f0fdf4;">
+                <span>ORIGINAL LEAD — RECONCILIATION CONTEXT</span>
+                <span style="font-weight:400; text-transform:none; color:#64748b;">This is the original lead that matches the duplicate record above.</span>
+              </div>
+              <div class="recon-grid">
+                <div class="recon-cell">
+                  <div class="info-lbl">ORIGINAL LEAD ID</div>
+                  <div class="info-val" style="font-size:11px; word-break:break-all;">FB_AHV-2081964992431581</div>
+                </div>
+                <div class="recon-cell">
+                  <div class="info-lbl">ORIGINAL NAME</div>
+                  <div class="info-val">Sandeip Agarrwal</div>
+                </div>
+                <div class="recon-cell">
+                  <div class="info-lbl">MOBILE NUMBER</div>
+                  <div class="info-val">919910173097</div>
+                </div>
+                <div class="recon-cell">
+                  <div class="info-lbl">EMAIL ID</div>
+                  <div class="info-val">Office@flowhuman.ai</div>
+                </div>
+                <div class="recon-cell">
+                  <div class="info-lbl">ORIGINAL ENQUIRY TIME</div>
+                  <div class="info-val">07 Aug 2026 09:38:02</div>
+                </div>
+                <div class="recon-cell">
+                  <div class="info-lbl">ORIGINAL DATA SOURCE</div>
+                  <div class="info-val">Facebook</div>
+                </div>
+                <div class="recon-cell">
+                  <div class="info-lbl">STATUS</div>
+                  <div class="info-val" style="color:#16a34a; font-weight:800;">Original / Valid</div>
+                </div>
+                <div class="recon-cell">
+                  <div class="info-lbl">MATCH BASIS</div>
+                  <div class="info-val">Mobile & Email</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Update Top Stat Boxes according to image
+      if (isAll) {
+        document.getElementById('gapTotalVal').innerText = "2";
+        const duplicateCol = document.querySelector('.modal-stat-box .stat-col:nth-child(2) .stat-val');
+        if (duplicateCol) duplicateCol.innerText = "2";
+        document.getElementById('gapLostVal').innerText = "0";
+
+        listContainer.innerHTML = getFbCardHtml() + getIvrCardHtml();
+      } else if (isIvr) {
+        document.getElementById('gapTotalVal').innerText = "1";
+        const duplicateCol = document.querySelector('.modal-stat-box .stat-col:nth-child(2) .stat-val');
+        if (duplicateCol) duplicateCol.innerText = "1";
+        document.getElementById('gapLostVal').innerText = "0";
+
+        listContainer.innerHTML = getIvrCardHtml();
+      } else if (isFb) {
+        document.getElementById('gapTotalVal').innerText = "1";
+        const duplicateCol = document.querySelector('.modal-stat-box .stat-col:nth-child(2) .stat-val');
+        if (duplicateCol) duplicateCol.innerText = "1";
+        document.getElementById('gapLostVal').innerText = "0";
+
+        listContainer.innerHTML = getFbCardHtml();
+      } else {
+        // Red Theme Gap / Lost Modal for Facebook / Google
+        const gapLeads = appData.leads.filter(l => l.is_gap && (l.source === source || source === 'All'));
+        gapLeads.forEach(lead => {
+          const card = document.createElement('div');
+          card.className = 'lead-card gap-card';
+          card.innerHTML = `
+            <div style="border-left:4px solid #dc2626; padding-left:14px;">
+              <div class="lead-card-header">
+                <div>
+                  <div style="font-size:10px; font-weight:800; color:#b91c1c; text-transform:uppercase;">MISSING LEAD</div>
+                  <div style="font-size:20px; font-weight:800; color:#0f172a; margin-top:2px;">${lead.id}</div>
+                  <div style="font-size:12px; color:#64748b;">${lead.name} · ${lead.source}</div>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-size:12px; font-weight:600; color:#64748b;">${lead.mobile_mask || '**** 3747'}</div>
+                  <div style="font-size:12px; color:#94a3b8; margin-top:4px;">${lead.enquiry_time || '07 Aug 2026 - 08:59'}</div>
+                  <span class="badge-lost-tag" style="margin-top:6px; display:inline-block;">Actual Lost</span>
+                </div>
+              </div>
+
+              <div class="gap-reason-box" style="margin-top:14px;">
+                <div>
+                  <div class="gap-reason-title">ACTUAL STATUS / REASON OF LOST</div>
+                  <div class="gap-reason-text">${lead.gap_reason || "No Duplicate — It's Lost"}</div>
+                  <div style="font-size:11px; color:#7f1d1d; margin-top:2px;">${lead.gap_subtext || "No earlier forwarded lead matched by Enquiry ID, Mobile Number or Email ID within 24 hours."}</div>
+                </div>
+                <button class="btn-high-alert">HIGH ALERT</button>
+              </div>
+
+              <div class="recon-context-box" style="margin-top:14px;">
+                <div class="recon-header">
+                  <span>ACTUAL LOST LEAD — RECONCILIATION CONTEXT</span>
+                  <span style="font-weight:400; text-transform:none; color:#64748b;">No matching forwarded lead found by Enquiry ID, Mobile Number or Email ID</span>
+                </div>
+                <div class="recon-grid">
+                  <div class="recon-cell">
+                    <div class="info-lbl">ORIGINAL LEAD ID</div>
+                    <div class="info-val" style="color:#94a3b8;">—</div>
+                  </div>
+                  <div class="recon-cell">
+                    <div class="info-lbl">ORIGINAL NAME</div>
+                    <div class="info-val" style="color:#94a3b8;">—</div>
+                  </div>
+                  <div class="recon-cell">
+                    <div class="info-lbl">MOBILE NUMBER</div>
+                    <div class="info-val" style="color:#94a3b8;">—</div>
+                  </div>
+                  <div class="recon-cell">
+                    <div class="info-lbl">EMAIL ID</div>
+                    <div class="info-val" style="color:#94a3b8;">—</div>
+                  </div>
+                  <div class="recon-cell">
+                    <div class="info-lbl">ORIGINAL ENQUIRY TIME</div>
+                    <div class="info-val" style="color:#94a3b8;">—</div>
+                  </div>
+                  <div class="recon-cell">
+                    <div class="info-lbl">ORIGINAL DATA SOURCE</div>
+                    <div class="info-val" style="color:#94a3b8;">—</div>
+                  </div>
+                  <div class="recon-cell">
+                    <div class="info-lbl">STATUS</div>
+                    <div class="info-val" style="color:#dc2626; font-weight:700;">Actual Lost</div>
+                  </div>
+                  <div class="recon-cell">
+                    <div class="info-lbl">MATCH BASIS</div>
+                    <div class="info-val" style="color:#94a3b8;">—</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+          listContainer.appendChild(card);
+        });
+      }
+
+      modal.classList.add('open');
+      lucide.createIcons();
+    }
+
+    function closeModals() {
+      document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('open'));
+    }
+
+    function handleSearch() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = appData.summary.filter(r => 
+        r.source.toLowerCase().includes(q) || 
+        r.company.toLowerCase().includes(q) ||
+        r.date.toLowerCase().includes(q)
+      );
+      renderTable(filtered);
+    }
+
+    function resetFilters() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('sourceSelect').value = 'All';
+      renderTable(appData.summary);
+    }
+
+    // Initialize
+    window.addEventListener('DOMContentLoaded', () => {
+      renderTable(appData.summary);
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
