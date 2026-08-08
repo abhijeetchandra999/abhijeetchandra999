@@ -590,6 +590,29 @@
       display: flex !important;
     }
 
+    /* Modal Pop-up Drawer Window */
+    .modal-drawer {
+      width: 100%;
+      max-width: 760px;
+      background: white;
+      max-height: 90vh;
+      border-radius: 12px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      animation: popIn 0.25s ease-out;
+      overflow: hidden;
+    }
+
+    .modal-body {
+      padding: 24px;
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
     /* Responsive Design for Mobile & Tablet */
     @media (max-width: 900px) {
       body {
