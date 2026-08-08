@@ -1172,7 +1172,7 @@
             </div>
             <div class="kpi-title">VALID DUPLICATES</div>
           </div>
-          <div class="kpi-value">1</div>
+          <div class="kpi-value" id="kpi-duplicates">2</div>
           <div class="kpi-sub">ID / mobile / email proof</div>
         </div>
 
@@ -1183,8 +1183,8 @@
             </div>
             <div class="kpi-title">TAT / SLA BREACH</div>
           </div>
-          <div class="kpi-value">13</div>
-          <div class="kpi-sub">Average 388 min</div>
+          <div class="kpi-value" id="kpi-breaches">3</div>
+          <div class="kpi-sub">Sources breached</div>
         </div>
 
         <div class="kpi-card">
@@ -1194,8 +1194,8 @@
             </div>
             <div class="kpi-title">SALES / KSERVE</div>
           </div>
-          <div class="kpi-value" id="kpi-kserve">15</div>
-          <div class="kpi-sub">60% of intake</div>
+          <div class="kpi-value" id="kpi-kserve">24</div>
+          <div class="kpi-sub">17 KServe + 7 Sales</div>
         </div>
       </div>
 
@@ -1662,34 +1662,34 @@
         },
         {
           id: "1655088796227259",
-          name: "-",
+          name: "Deepak Gupta",
           company: "VillaRaag",
           source: "Facebook",
           date: "2026-08-07 16:12:45",
           chatbase_source: "Faacebook",
-          status_badge: "Direct Sheet",
-          current_status: "-",
-          buffer_status: "-",
-          crm_status: "-",
-          transfer_status: "Transfer at Villa_Raag_FacebookAPI_Medium07-Aug-26",
-          tat: "-",
-          audit_finding: "Record present in Direct Sheet Villaraag Facebook",
-          is_gap: false
+          status_badge: "Lost",
+          current_status: "Lost",
+          buffer_status: "Missing from Buffer",
+          crm_status: "Actual Lost",
+          transfer_status: "Transfer To Deleted Sheet 07/08/2026",
+          tat: "5h 35m",
+          audit_finding: "Transferred to Deleted Sheet",
+          is_gap: true
         },
         {
           id: "4350713851858965",
-          name: "-",
+          name: "Suresh Joshi",
           company: "VillaRaag",
           source: "Facebook",
           date: "2026-08-07 17:37:33",
           chatbase_source: "Faacebook",
-          status_badge: "Direct Sheet",
-          current_status: "-",
-          buffer_status: "-",
-          crm_status: "-",
-          transfer_status: "Transfer at Villa_Raag_FacebookAPI_Medium07-Aug-26",
-          tat: "-",
-          audit_finding: "Record present in Direct Sheet Villaraag Facebook",
+          status_badge: "Delayed",
+          current_status: "Transferred to Buffer",
+          buffer_status: "Lead ID matched",
+          crm_status: "Live CRM matched via SQL Status",
+          transfer_status: "Transfer To Original Buffer 07/08/2026",
+          tat: "5h 51m",
+          audit_finding: "Transfer timestamp exceeds SLA",
           is_gap: false
         },
 
@@ -1699,7 +1699,7 @@
           name: "-",
           company: "VillaRaag",
           source: "Google",
-          date: "7/8/2026, 5:30:19 AM",
+          date: "2026-08-07 05:30:19",
           chatbase_source: "Google",
           status_badge: "Direct Sheet",
           current_status: "-",
@@ -1715,7 +1715,7 @@
           name: "-",
           company: "VillaRaag",
           source: "Google",
-          date: "7/8/2026, 11:22:55 AM",
+          date: "2026-08-07 11:22:55",
           chatbase_source: "Google",
           status_badge: "Direct Sheet",
           current_status: "-",
@@ -1731,7 +1731,7 @@
           name: "-",
           company: "VillaRaag",
           source: "Google",
-          date: "7/8/2026, 12:51:08 PM",
+          date: "2026-08-07 12:51:08",
           chatbase_source: "Google",
           status_badge: "Direct Sheet",
           current_status: "-",
@@ -1747,7 +1747,7 @@
           name: "-",
           company: "VillaRaag",
           source: "Google",
-          date: "7/8/2026, 1:02:11 PM",
+          date: "2026-08-07 13:02:11",
           chatbase_source: "Google",
           status_badge: "Direct Sheet",
           current_status: "-",
@@ -1763,7 +1763,7 @@
           name: "-",
           company: "VillaRaag",
           source: "Google",
-          date: "7/8/2026, 1:08:35 PM",
+          date: "2026-08-07 13:08:35",
           chatbase_source: "Google",
           status_badge: "Direct Sheet",
           current_status: "-",
@@ -1779,7 +1779,7 @@
           name: "-",
           company: "VillaRaag",
           source: "Google",
-          date: "7/8/2026, 5:13:26 PM",
+          date: "2026-08-07 17:13:26",
           chatbase_source: "Google",
           status_badge: "Direct Sheet",
           current_status: "-",
@@ -1795,7 +1795,7 @@
           name: "-",
           company: "VillaRaag",
           source: "Google",
-          date: "7/8/2026, 8:29:47 PM",
+          date: "2026-08-07 20:29:47",
           chatbase_source: "Google",
           status_badge: "Direct Sheet",
           current_status: "-",
@@ -1811,7 +1811,7 @@
           name: "-",
           company: "VillaRaag",
           source: "Google",
-          date: "7/8/2026, 10:59:19 PM",
+          date: "2026-08-07 22:59:19",
           chatbase_source: "Google",
           status_badge: "Direct Sheet",
           current_status: "-",
@@ -1826,83 +1826,88 @@
         // --- ANJALI AI WEB (2 RECORDS) ---
         {
           id: "89094d3f-4764-4948-a677-8efbc6e567ef",
-          name: "-",
+          name: "Vikram Kumar Kushwaha",
           company: "VillaRaag",
           source: "Anjali AI Web",
-          date: "2026-08-07 08:24:46",
           chatbase_source: "Anjali AI Web",
-          status_badge: "Direct Sheet",
-          current_status: "-",
-          buffer_status: "-",
-          crm_status: "-",
-          transfer_status: "Transfer to ChatBase Medium 07-Aug-26",
-          tat: "-",
-          audit_finding: "Record present in Direct Sheet Anjali AI Web",
+          date: "2026-08-07 08:24:46",
+          status_badge: "In SLA",
+          current_status: "Transferred to Buffer",
+          buffer_status: "Lead ID matched",
+          crm_status: "Live CRM matched via SQL Status",
+          transfer_status: "Transfer To Original Buffer 07/08/2026",
+          assigned_to: "VILLARAAG NDB SALES",
+          tat: "33m",
+          audit_finding: "Reconciled successfully",
           is_gap: false
         },
         {
           id: "e60e400b-6ebb-4ad8-93d6-c95d9640c8fc",
-          name: "-",
+          name: "Sandeip Agarrwal",
           company: "VillaRaag",
           source: "Anjali AI Web",
-          date: "2026-08-07 21:44:35",
           chatbase_source: "Anjali AI Web",
-          status_badge: "Direct Sheet",
-          current_status: "-",
-          buffer_status: "-",
-          crm_status: "-",
-          transfer_status: "Transfer to ChatBase Medium 07-Aug-26",
-          tat: "-",
-          audit_finding: "Record present in Direct Sheet Anjali AI Web",
+          date: "2026-08-07 21:44:35",
+          status_badge: "Delayed",
+          current_status: "Transferred to Buffer",
+          buffer_status: "Lead ID matched",
+          crm_status: "Live CRM matched via SQL Status",
+          transfer_status: "Transfer To Original Buffer 07/08/2026",
+          assigned_to: "Sadik Rehman",
+          tat: "1h 13m",
+          audit_finding: "Transfer timestamp exceeds SLA",
           is_gap: false
         },
 
         // --- IVR (3 RECORDS) ---
         {
           id: "917ed547-73ec-4e31-8288-4cd2f084482c",
-          name: "-",
+          name: "IVR Lead 917ed5",
           company: "VillaRaag",
           source: "IVR",
-          date: "2026-08-07 10:33:33",
           chatbase_source: "IVR",
-          status_badge: "Direct Sheet",
-          current_status: "-",
-          buffer_status: "-",
-          crm_status: "-",
-          transfer_status: "Transfer to IVR Medium 07-Aug-26",
-          tat: "-",
-          audit_finding: "Record present in Direct Sheet IVR",
+          date: "2026-08-07 10:33:33",
+          status_badge: "In SLA",
+          current_status: "Transferred to Buffer",
+          buffer_status: "Lead ID matched",
+          crm_status: "Live CRM matched",
+          transfer_status: "Transfer To Original Buffer 07/08/2026",
+          assigned_to: "KServe",
+          tat: "23m",
+          audit_finding: "Reconciled successfully",
           is_gap: false
         },
         {
           id: "3656f5ac-a3b3-4350-953f-fc835210c2f2",
-          name: "-",
+          name: "IVR Lead 3656f5",
           company: "VillaRaag",
           source: "IVR",
-          date: "2026-08-07 10:56:07",
           chatbase_source: "IVR",
-          status_badge: "Direct Sheet",
-          current_status: "-",
-          buffer_status: "-",
-          crm_status: "-",
-          transfer_status: "Transfer to IVR Medium 07-Aug-26",
-          tat: "-",
-          audit_finding: "Record present in Direct Sheet IVR",
+          date: "2026-08-07 10:56:07",
+          status_badge: "In SLA",
+          current_status: "Transferred to Buffer",
+          buffer_status: "Lead ID matched",
+          crm_status: "Live CRM matched",
+          transfer_status: "Transfer To Original Buffer 07/08/2026",
+          assigned_to: "HARPAL SINGH",
+          tat: "32m",
+          audit_finding: "Reconciled successfully",
           is_gap: false
         },
         {
           id: "b1fd6952-761e-45f3-af0a-4781754f63ab",
-          name: "-",
+          name: "IVR Lead b1fd69",
           company: "VillaRaag",
           source: "IVR",
-          date: "2026-08-07 14:58:30",
           chatbase_source: "IVR",
-          status_badge: "Direct Sheet",
-          current_status: "-",
-          buffer_status: "-",
-          crm_status: "-",
-          transfer_status: "Transfer to IVR Medium 07-Aug-26",
-          tat: "-",
+          date: "2026-08-07 14:58:30",
+          status_badge: "Lost",
+          current_status: "Lost",
+          buffer_status: "Missing from Buffer",
+          crm_status: "Actual Lost",
+          transfer_status: "Transfer To Deleted Sheet 07/08/2026",
+          assigned_to: "-",
+          tat: "15m",
           audit_finding: "Transferred to Deleted Sheet",
           is_gap: true,
           gap_type: "Buffer-CRM",
@@ -2037,9 +2042,11 @@
       tbody.appendChild(totalTr);
 
       // Update KPI cards
-      document.getElementById('kpi-direct').innerText = tot_direct;
-      document.getElementById('kpi-gaps').innerText = tot_gap_dm + tot_gap_mb + tot_gap_bc;
-      document.getElementById('kpi-kserve').innerText = tot_kserve;
+      if (document.getElementById('kpi-direct')) document.getElementById('kpi-direct').innerText = tot_direct;
+      if (document.getElementById('kpi-gaps')) document.getElementById('kpi-gaps').innerText = tot_gap_dm + tot_gap_mb + tot_gap_bc;
+      if (document.getElementById('kpi-duplicates')) document.getElementById('kpi-duplicates').innerText = "2";
+      if (document.getElementById('kpi-breaches')) document.getElementById('kpi-breaches').innerText = "3";
+      if (document.getElementById('kpi-kserve')) document.getElementById('kpi-kserve').innerText = tot_sales + tot_kserve;
     }
 
     // Modal 1 Trigger (Image 4 Pop-up design)
@@ -2051,18 +2058,20 @@
       const listContainer = document.getElementById('sheetLeadsList');
       listContainer.innerHTML = '';
 
+      const norm = s => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
       // Filter matching leads
-      let matchingLeads = appData.leads.filter(l => (l.source === source || source === 'All'));
+      let matchingLeads = appData.leads.filter(l => (norm(l.source) === norm(source) || source === 'All'));
       
       if (colTitle.includes('Buffer')) {
         // Exclude gap/deleted leads from Transfer to Buffer view
         matchingLeads = matchingLeads.filter(l => !l.is_gap);
       } else if (colTitle.includes('Sales')) {
-        // Filter only leads transferred to Sales (e.g. Sales team assignment)
-        matchingLeads = matchingLeads.filter(l => !l.is_gap && (l.transfer_status.toLowerCase().includes('sales') || l.chatbase_source === 'Facebook' || source === 'IVR' || source === 'Anjali AI Web'));
+        // Filter only leads transferred to Sales Person (assigned_to != 'KServe')
+        matchingLeads = matchingLeads.filter(l => !l.is_gap && l.assigned_to && l.assigned_to !== 'KServe');
       } else if (colTitle.includes('KServe')) {
-        // Filter only leads transferred to KServe
-        matchingLeads = matchingLeads.filter(l => !l.is_gap);
+        // Filter only leads transferred to KServe (assigned_to == 'KServe')
+        matchingLeads = matchingLeads.filter(l => !l.is_gap && l.assigned_to === 'KServe');
       }
 
       if (count && matchingLeads.length > count) {
@@ -2096,8 +2105,16 @@
               <span class="info-val">${lead.source || '-'}</span>
             </div>
             <div class="info-item">
+              <span class="info-lbl">Verified Source</span>
+              <span class="info-val">${lead.verified_source || lead.source || '-'}</span>
+            </div>
+            <div class="info-item">
               <span class="info-lbl">Chatbase Data Source</span>
-              <span class="info-val">${lead.chatbase_source || '-'}</span>
+              <span class="info-val">${lead.chatbase_source || lead.source || '-'}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-lbl">Assign to MR Main</span>
+              <span class="info-val" style="font-weight:700; color:#0d9488;">${lead.assigned_to || '-'}</span>
             </div>
             <div class="info-item">
               <span class="info-lbl">Current Status</span>
@@ -2413,8 +2430,19 @@
 
     // Initialize
     window.addEventListener('DOMContentLoaded', () => {
-      renderTable(appData.summary);
-      lucide.createIcons();
+      fetch('app_data.json')
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.summary && data.leads) {
+            appData.summary = data.summary;
+            appData.leads = data.leads;
+          }
+        })
+        .catch(err => console.log('Loaded default inline appData'))
+        .finally(() => {
+          renderTable(appData.summary);
+          lucide.createIcons();
+        });
     });
   </script>
 </body>
