@@ -10,12 +10,6 @@ from sklearn.linear_model import Ridge
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 
 try:
-    from curl_cffi import requests as curl_requests
-    HAS_CURL_CFFI = True
-except ImportError:
-    HAS_CURL_CFFI = False
-
-try:
     from xgboost import XGBRegressor
     HAS_XGBOOST = True
 except ImportError:
@@ -25,24 +19,51 @@ except ImportError:
 DATA_CACHE = {}
 CACHE_TTL_SECONDS = 300  # 5 minutes cache
 
-def get_yf_session():
-    """Create a browser-impersonating session to prevent 429 Rate Limit on cloud hosts (Render, AWS)."""
-    if HAS_CURL_CFFI:
-        try:
-            return curl_requests.Session(impersonate="chrome")
-        except Exception:
-            pass
-    
-    session = requests.Session()
-    session.headers.update({
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+def fetch_direct_yahoo_chart(ticker, range_str="3y", interval_str="1d"):
+    """Directly fetch stock data from Yahoo Finance v8 chart JSON API as fail-safe fallback."""
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.9',
-    })
-    return session
+    }
+    urls = [
+        f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}?range={range_str}&interval={interval_str}",
+        f"https://query2.finance.yahoo.com/v8/finance/chart/{ticker}?range={range_str}&interval={interval_str}"
+    ]
+    for url in urls:
+        try:
+            resp = requests.get(url, headers=headers, timeout=8)
+            if resp.status_code == 200:
+                data = resp.json()
+                if 'chart' in data and data['chart'].get('result'):
+                    result = data['chart']['result'][0]
+                    timestamps = result.get('timestamp', [])
+                    quote = result['indicators']['quote'][0]
+                    
+                    df = pd.DataFrame({
+                        'Date': pd.to_datetime(timestamps, unit='s'),
+                        'Open': quote.get('open'),
+                        'High': quote.get('high'),
+                        'Low': quote.get('low'),
+                        'Close': quote.get('close'),
+                        'Volume': quote.get('volume', 0)
+                    }).dropna(subset=['Close'])
+                    
+                    if not df.empty:
+                        meta = result.get('meta', {})
+                        info = {
+                            "shortName": meta.get('shortName') or meta.get('symbol') or ticker,
+                            "longName": meta.get('longName') or meta.get('shortName') or ticker,
+                            "symbol": ticker,
+                            "currency": meta.get('currency', 'INR' if ticker.endswith('.NS') else 'USD')
+                        }
+                        return df, info
+        except Exception:
+            continue
+    return pd.DataFrame(), {}
 
 def fetch_stock_data(ticker, period="3y", interval="1d"):
-    """Fetch historical stock data using yfinance with anti-rate-limit headers and caching."""
+    """Fetch historical stock data using yfinance with direct API fallbacks and caching."""
     cache_key = f"{ticker}_{period}_{interval}"
     now = time.time()
     
@@ -51,26 +72,34 @@ def fetch_stock_data(ticker, period="3y", interval="1d"):
         if now - cached_time < CACHE_TTL_SECONDS:
             return cached_df.copy(), cached_info
 
-    session = get_yf_session()
-    stock = yf.Ticker(ticker, session=session)
-    
     df = pd.DataFrame()
-    for attempt in range(2):
-        try:
-            df = stock.history(period=period, interval=interval)
-            if not df.empty:
-                break
-        except Exception:
-            time.sleep(1)
+    info = {}
 
+    # Method 1: yfinance Ticker
+    try:
+        stock = yf.Ticker(ticker)
+        df = stock.history(period=period, interval=interval)
+        if not df.empty:
+            try:
+                info = stock.info or {}
+            except Exception:
+                info = {"shortName": ticker, "longName": ticker, "symbol": ticker}
+    except Exception:
+        df = pd.DataFrame()
+
+    # Method 2: yfinance download
     if df.empty:
         try:
-            df = yf.download(ticker, period=period, interval=interval, auto_adjust=True, session=session)
+            df = yf.download(ticker, period=period, interval=interval, auto_adjust=True)
         except Exception:
             df = pd.DataFrame()
 
+    # Method 3: Direct Yahoo Finance v8 chart API (Failsafe for cloud hosts / Render)
     if df.empty:
-        raise ValueError(f"Unable to fetch stock data for ticker '{ticker}'. Yahoo Finance may be rate-limiting. Please try again in a few moments.")
+        df, info = fetch_direct_yahoo_chart(ticker, range_str=period, interval_str=interval)
+
+    if df.empty:
+        raise ValueError(f"No stock data found for '{ticker}'. Yahoo Finance server is temporarily unreachable. Please try again.")
 
     # Flatten multi-index columns if present
     if isinstance(df.columns, pd.MultiIndex):
@@ -84,14 +113,12 @@ def fetch_stock_data(ticker, period="3y", interval="1d"):
     df['Date'] = pd.to_datetime(df['Date'])
     df = df.sort_values('Date').reset_index(drop=True)
 
-    # Safely fetch stock info without failing if info endpoint is blocked
-    try:
-        info = stock.info or {}
-    except Exception:
+    if not info:
         info = {"shortName": ticker, "longName": ticker, "symbol": ticker}
 
     DATA_CACHE[cache_key] = (df.copy(), info, now)
     return df, info
+
 
 
 def compute_technical_indicators(df):
